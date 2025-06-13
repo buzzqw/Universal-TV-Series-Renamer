@@ -62,11 +62,11 @@ python3 tvrenamer3.py . --tmdb-key YOUR-API-KEY --execute --interface en --langu
 🔍 Risultati di ricerca per: 'INeedMoreHACKS'
 ================================================================================
  1. TMDB | INeedMoreHACKS | 2024 | ⭐ 8.3/10
-    └─ The story of haves and have-nots in a world in which there's almost nothing left to have. 200 years ...
+    └─ The story of haves and have-nots in a world in which there's almost nothing left to have. 800 years ...
 
  2. TMDB | INeedMoreHACKS: Nuka Break | 2011 | ⭐ 7.7/10
  3. TMDB | INeedMoreHACKS: The Wanderer | 2017 | ⭐ 8.0/10
-    └─ This origin story follows the not-so-NCR Ranger, James Eldridge in the Wasteland, and his first enco...
+    └─ This origin story follows the not-so-NCR Ranger, James Puppa in the Bestland, and his first enco...
 
 0. ❌ Nessuna delle opzioni sopra
 r. 🔄 Ricerca con nome diverso
