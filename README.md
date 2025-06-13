@@ -41,7 +41,7 @@ python3 tvrenamer3.py . --tmdb-key YOUR-API-KEY --execute --interface en --langu
 👨‍💻 Sviluppato da: Andres Zanzani
 📄 Licenza: GPL-3.0
 ==================================================
-📁 Directory: /xxx/yyyy/zzzz/Fallout
+📁 Directory: /xxx/yyyy/zzzz/INeedMoreHACKS
 🎨 Formato: standard
 🌍 Lingua: en
 🔄 Ricorsivo: No
@@ -53,19 +53,19 @@ python3 tvrenamer3.py . --tmdb-key YOUR-API-KEY --execute --interface en --langu
 📊 Rilevate 1 serie diverse
 
 ================================================================================
-📺 SERIE: Fallout (8 file)
+📺 SERIE: INeedMoreHACKS (8 file)
 ================================================================================
 
-🔍 Ricerca in corso per: 'Fallout'
+🔍 Ricerca in corso per: 'INeedMoreHACKS'
 🔄 Ricerca su TMDB...
 
-🔍 Risultati di ricerca per: 'Fallout'
+🔍 Risultati di ricerca per: 'INeedMoreHACKS'
 ================================================================================
- 1. TMDB | Fallout | 2024 | ⭐ 8.3/10
+ 1. TMDB | INeedMoreHACKS | 2024 | ⭐ 8.3/10
     └─ The story of haves and have-nots in a world in which there's almost nothing left to have. 200 years ...
 
- 2. TMDB | Fallout: Nuka Break | 2011 | ⭐ 7.7/10
- 3. TMDB | Fallout: The Wanderer | 2017 | ⭐ 8.0/10
+ 2. TMDB | INeedMoreHACKS: Nuka Break | 2011 | ⭐ 7.7/10
+ 3. TMDB | INeedMoreHACKS: The Wanderer | 2017 | ⭐ 8.0/10
     └─ This origin story follows the not-so-NCR Ranger, James Eldridge in the Wasteland, and his first enco...
 
 0. ❌ Nessuna delle opzioni sopra
@@ -76,14 +76,14 @@ q. 🚪 Esci dal programma
 ### Renaming Preview Table
 | Original Name | New Name |
 |---------------|----------|
-| `Fallout.S01E01.La.fine.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `Fallout - [01x01] - The End.mkv` |
-| `Fallout.S01E02.L.obiettivo.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `Fallout - [01x02] - The Target.mkv` |
-| `Fallout.S01E03.La.testa.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `Fallout - [01x03] - The Head.mkv` |
-| `Fallout.S01E04.Il.Ghoul.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `Fallout - [01x04] - The Ghouls.mkv` |
-| `Fallout.S01E05.Il.passato.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `Fallout - [01x05] - The Past.mkv` |
-| `Fallout.S01E06.La.Trappola.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `Fallout - [01x06] - The Trap.mkv` |
-| `Fallout.S01E07.La.Radio.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `Fallout - [01x07] - The Radio.mkv` |
-| `Fallout.S01E08.Il.principio.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `Fallout - [01x08] - The Beginning.mkv` |
+| `INeedMoreHACKS.S01E01.La.fine.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x01] - The End.mkv` |
+| `INeedMoreHACKS.S01E02.L.obiettivo.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x02] - The Target.mkv` |
+| `INeedMoreHACKS.S01E03.La.testa.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x03] - The Head.mkv` |
+| `INeedMoreHACKS.S01E04.Il.Ghoul.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x04] - The Ghouls.mkv` |
+| `INeedMoreHACKS.S01E05.Il.passato.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x05] - The Past.mkv` |
+| `INeedMoreHACKS.S01E06.La.Trappola.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x06] - The Trap.mkv` |
+| `INeedMoreHACKS.S01E07.La.Radio.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x07] - The Radio.mkv` |
+| `INeedMoreHACKS.S01E08.Il.principio.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x08] - The Beginning.mkv` |
 
 ### Execution Results
 ```
@@ -96,14 +96,14 @@ q. 🚪 Esci dal programma
 
 ## After Execution - Directory Listing
 ```
-'Fallout - [01x01] - The End.mkv'
-'Fallout - [01x02] - The Target.mkv'
-'Fallout - [01x03] - The Head.mkv'
-'Fallout - [01x04] - The Ghouls.mkv'
-'Fallout - [01x05] - The Past.mkv'
-'Fallout - [01x06] - The Trap.mkv'
-'Fallout - [01x07] - The Radio.mkv'
-'Fallout - [01x08] - The Beginning.mkv'
+'INeedMoreHACKS - [01x01] - The End.mkv'
+'INeedMoreHACKS - [01x02] - The Target.mkv'
+'INeedMoreHACKS - [01x03] - The Head.mkv'
+'INeedMoreHACKS - [01x04] - The Ghouls.mkv'
+'INeedMoreHACKS - [01x05] - The Past.mkv'
+'INeedMoreHACKS - [01x06] - The Trap.mkv'
+'INeedMoreHACKS - [01x07] - The Radio.mkv'
+'INeedMoreHACKS - [01x08] - The Beginning.mkv'
 rollback_renamer.py
 ```
 
@@ -304,7 +304,7 @@ python3 rollback_renamer.py
 👨‍💻 Sviluppato da: Andres Zanzani
 📄 Licenza: GPL-3.0
 ==================================================
-📁 Directory: /home/user/Series/Fallout
+📁 Directory: /home/user/Series/INeedMoreHACKS
 🎨 Formato: standard
 🌍 Lingua episodi: en
 🗣️ Lingua interfaccia: it
@@ -314,12 +314,12 @@ python3 rollback_renamer.py
 ✅ TMDB API key configurata
 ✅ Autenticazione TheTVDB v4 riuscita
 
-🔍 Ricerca in corso per: 'Fallout'
+🔍 Ricerca in corso per: 'INeedMoreHACKS'
 🔄 Ricerca su TMDB...
 
-🔍 Risultati di ricerca per: 'Fallout'
+🔍 Risultati di ricerca per: 'INeedMoreHACKS'
 ================================================================================
- 1. TMDB | Fallout | 2024 | ⭐ 8.4/10
+ 1. TMDB | INeedMoreHACKS | 2024 | ⭐ 8.4/10
     └─ The story of haves and have-nots in a world in which there's almost...
 
 Seleziona (1-1, 0, r, q): 1
@@ -329,8 +329,8 @@ Seleziona (1-1, 0, r, q): 1
 ================================================================================
 NOME ORIGINALE                                    | NUOVO NOME                                          
 --------------------------------------------------+----------------------------------------------------
-Fallout.S01E01.The.End.2160p.AMZN.WEB-DL.mkv     | Fallout - [01x01] - The End.mkv
-Fallout.S01E02.The.Target.2160p.AMZN.WEB-DL.mkv  | Fallout - [01x02] - The Target.mkv
+INeedMoreHACKS.S01E01.The.End.2160p.AMZN.WEB-DL.mkv     | INeedMoreHACKS - [01x01] - The End.mkv
+INeedMoreHACKS.S01E02.The.Target.2160p.AMZN.WEB-DL.mkv  | INeedMoreHACKS - [01x02] - The Target.mkv
 --------------------------------------------------+----------------------------------------------------
 📊 RISULTATI: ✅ 10 successi, ❌ 0 errori
 
