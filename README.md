@@ -31,7 +31,7 @@ python3 tvrenamer3.py . --tmdb-key YOUR-API-KEY
 python3 tvrenamer3.py . --tmdb-key YOUR-API-KEY --execute --interface en --language en
 ```
 
-**If you like this project please offer a coffe!**  [TV Series](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)
+**If you like this project please offer a coffe!**  [PayPalME](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)
 
 ## Sample Output
 
