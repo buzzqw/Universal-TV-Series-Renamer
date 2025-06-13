@@ -3,6 +3,7 @@
 Universal TV Series Renamer
 Script universale per rinominare episodi di qualsiasi serie TV
 Interroga TheTVDB, TMDB e IMDb per ottenere informazioni automaticamente
+Supporta anche la rinomina automatica dei sottotitoli
 
 Copyright (C) 2024 Andres Zanzani
 
@@ -21,7 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Andres Zanzani
 License: GPL-3.0
-Version: 1.0
+Version: 1.1
 """
 
 import os
@@ -44,7 +45,7 @@ class TVSeriesRenamer:
         self.tvdb_token = None
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'UniversalTVRenamer/1.0',
+            'User-Agent': 'UniversalTVRenamer/1.1',
             'Accept': 'application/json'
         })
         self.language = 'it'  # Lingua di default per episodi
@@ -53,7 +54,7 @@ class TVSeriesRenamer:
         # Dizionari per i testi dell'interfaccia
         self.texts = {
             'it': {
-                'header': "📺 Universal TV Series Renamer v1.0",
+                'header': "📺 Universal TV Series Renamer v1.1",
                 'developer': "👨‍💻 Sviluppato da: Andres Zanzani",
                 'license': "📄 Licenza: GPL-3.0",
                 'directory': "📁 Directory:",
@@ -97,7 +98,7 @@ class TVSeriesRenamer:
                 'rollback_generated': "✅ Script di rollback generato: {}",
                 'rollback_instructions': "💡 Per ripristinare i nomi originali, esegui:",
                 'rollback_error': "❌ Errore nella generazione dello script di rollback: {}",
-                'confirm_rename': "⚠️  ATTENZIONE: Rinominare {} file?",
+                'confirm_rename': "⚠️  ATTENZIONE: Rinominare {} file (video e sottotitoli)?",
                 'confirm_prompt': "Confermi? [s/N]:",
                 'cancelled': "❌ Annullato",
                 'results_header': "📋 {} - {} file",
@@ -110,10 +111,14 @@ class TVSeriesRenamer:
                 'suggestions': "💡 Suggerimenti:",
                 'check_spelling': "   - Verifica l'ortografia del nome",
                 'try_english': "   - Prova con il nome originale in inglese",
-                'use_shorter': "   - Usa un nome più breve"
+                'use_shorter': "   - Usa un nome più breve",
+                'video_files_found': "📹 File video trovati: {}",
+                'subtitle_files_found': "📝 File sottotitoli trovati: {}",
+                'subtitle_processed': "📝 Sottotitolo associato: {}",
+                'subtitle_orphan': "⚠️  Sottotitolo orfano: {} (nessun video corrispondente)"
             },
             'en': {
-                'header': "📺 Universal TV Series Renamer v1.0",
+                'header': "📺 Universal TV Series Renamer v1.1",
                 'developer': "👨‍💻 Developed by: Andres Zanzani",
                 'license': "📄 License: GPL-3.0",
                 'directory': "📁 Directory:",
@@ -157,7 +162,7 @@ class TVSeriesRenamer:
                 'rollback_generated': "✅ Rollback script generated: {}",
                 'rollback_instructions': "💡 To restore original names, run:",
                 'rollback_error': "❌ Error generating rollback script: {}",
-                'confirm_rename': "⚠️  WARNING: Rename {} files?",
+                'confirm_rename': "⚠️  WARNING: Rename {} files (video and subtitles)?",
                 'confirm_prompt': "Confirm? [y/N]:",
                 'cancelled': "❌ Cancelled",
                 'results_header': "📋 {} - {} files",
@@ -170,7 +175,11 @@ class TVSeriesRenamer:
                 'suggestions': "💡 Suggestions:",
                 'check_spelling': "   - Check the spelling of the name",
                 'try_english': "   - Try with the original English name",
-                'use_shorter': "   - Use a shorter name"
+                'use_shorter': "   - Use a shorter name",
+                'video_files_found': "📹 Video files found: {}",
+                'subtitle_files_found': "📝 Subtitle files found: {}",
+                'subtitle_processed': "📝 Subtitle associated: {}",
+                'subtitle_orphan': "⚠️  Orphan subtitle: {} (no matching video)"
             }
         }
 
@@ -249,6 +258,45 @@ class TVSeriesRenamer:
                 return int(match.group(1)), int(match.group(2))
         
         return None, None
+
+    def extract_subtitle_language(self, filename):
+        """Estrae il codice lingua dal nome del sottotitolo"""
+        filename_lower = filename.lower()
+        
+        # Pattern con gruppi di cattura
+        patterns_with_groups = [
+            r'\.([a-z]{2,3})\.srt$',  # .it.srt, .eng.srt
+            r'\.([a-z]{2,3})\.sub$',  # .it.sub
+            r'\.([a-z]{2,3})\.ass$',  # .it.ass
+            r'\.([a-z]{2,3})\.ssa$',  # .it.ssa
+            r'\.([a-z]{2,3})\.vtt$',  # .it.vtt
+            r'\[([a-z]{2,3})\]',      # [it], [eng]
+            r'_([a-z]{2,3})_',        # _it_, _eng_
+        ]
+        
+        # Prova prima i pattern con gruppi
+        for pattern in patterns_with_groups:
+            match = re.search(pattern, filename_lower)
+            if match:
+                lang_code = match.group(1)
+                # Normalizza alcuni codici comuni
+                lang_mapping = {
+                    'ita': 'it',
+                    'eng': 'en',
+                }
+                return lang_mapping.get(lang_code, lang_code)
+        
+        # Pattern senza gruppi - controllo diretto
+        if '.italian.' in filename_lower or '.italiani.' in filename_lower:
+            return 'it'
+        elif '.english.' in filename_lower:
+            return 'en'
+        elif '.iTALiAN.' in filename_lower:
+            return 'it'
+        elif '.ENGLISH.' in filename_lower:
+            return 'en'
+        
+        return None
 
     def search_series_tmdb(self, series_name):
         """Cerca la serie su TMDB"""
@@ -580,6 +628,21 @@ class TVSeriesRenamer:
         
         return formats.get(format_style, formats["standard"])
 
+    def generate_subtitle_filename(self, video_filename, subtitle_ext, language_code=None, version_suffix=""):
+        """Genera il nome del file sottotitolo basato sul video"""
+        # Rimuovi l'estensione dal nome del video
+        video_base = Path(video_filename).stem
+        
+        # Aggiungi suffisso versione se presente
+        if version_suffix:
+            video_base = f"{video_base}{version_suffix}"
+        
+        # Aggiungi codice lingua se presente
+        if language_code:
+            return f"{video_base}.{language_code}{subtitle_ext}"
+        else:
+            return f"{video_base}{subtitle_ext}"
+
     def clean_filename(self, name):
         """Pulisce il nome file da caratteri non validi"""
         # Decodifica caratteri HTML
@@ -596,42 +659,104 @@ class TVSeriesRenamer:
         
         return name
 
-    def find_video_files(self, directory):
-        """Trova file video nella directory"""
+    def find_media_files(self, directory):
+        """Trova file video e sottotitoli nella directory"""
         video_extensions = {'.mkv', '.avi', '.mp4', '.m4v', '.mov', '.wmv', '.flv', '.webm', '.ts', '.m2ts'}
+        subtitle_extensions = {'.srt', '.sub', '.ass', '.ssa', '.vtt', '.idx', '.sup'}
+        
         video_files = []
+        subtitle_files = []
         
         path = Path(directory)
-        for file_path in path.rglob('*') if getattr(self, 'recursive', False) else path.iterdir():
-            if file_path.is_file() and file_path.suffix.lower() in video_extensions:
-                video_files.append(file_path)
+        file_iterator = path.rglob('*') if getattr(self, 'recursive', False) else path.iterdir()
         
-        return sorted(video_files)
+        for file_path in file_iterator:
+            if file_path.is_file():
+                ext = file_path.suffix.lower()
+                if ext in video_extensions:
+                    video_files.append(file_path)
+                elif ext in subtitle_extensions:
+                    subtitle_files.append(file_path)
+        
+        return sorted(video_files), sorted(subtitle_files)
+
+    def match_subtitles_to_videos(self, video_files, subtitle_files):
+        """Associa i sottotitoli ai file video corrispondenti"""
+        video_subtitle_map = {}
+        orphan_subtitles = []
+        
+        for video_file in video_files:
+            video_subtitle_map[video_file] = []
+        
+        for subtitle_file in subtitle_files:
+            # Estrai informazioni dal sottotitolo
+            sub_season, sub_episode = self.extract_episode_info(subtitle_file.name)
+            sub_language = self.extract_subtitle_language(subtitle_file.name)
+            
+            if sub_season is None or sub_episode is None:
+                orphan_subtitles.append(subtitle_file)
+                continue
+            
+            # Trova il video corrispondente
+            matching_video = None
+            for video_file in video_files:
+                vid_season, vid_episode = self.extract_episode_info(video_file.name)
+                if vid_season == sub_season and vid_episode == sub_episode:
+                    matching_video = video_file
+                    break
+            
+            if matching_video:
+                video_subtitle_map[matching_video].append({
+                    'file': subtitle_file,
+                    'language': sub_language,
+                    'season': sub_season,
+                    'episode': sub_episode
+                })
+                print(self.get_text('subtitle_processed', subtitle_file.name))
+            else:
+                orphan_subtitles.append(subtitle_file)
+        
+        # Mostra sottotitoli orfani
+        for orphan in orphan_subtitles:
+            print(self.get_text('subtitle_orphan', orphan.name))
+        
+        return video_subtitle_map
 
     def process_files(self, directory, format_style="standard", dry_run=True):
         """Processa tutti i file nella directory"""
-        video_files = self.find_video_files(directory)
+        video_files, subtitle_files = self.find_media_files(directory)
         
-        if not video_files:
-            print("❌ Nessun file video trovato!")
+        if not video_files and not subtitle_files:
+            print("❌ Nessun file video o sottotitolo trovato!")
             return
         
-        print(f"\n📁 Trovati {len(video_files)} file video")
+        print(f"\n{self.get_text('video_files_found', len(video_files))}")
+        print(f"{self.get_text('subtitle_files_found', len(subtitle_files))}")
+        
+        # Associa sottotitoli ai video
+        video_subtitle_map = self.match_subtitles_to_videos(video_files, subtitle_files)
         
         # Raggruppa file per serie (basato sul nome estratto)
         series_groups = {}
-        for file_path in video_files:
-            series_name = self.extract_series_info(file_path.name)
+        for video_file in video_files:
+            series_name = self.extract_series_info(video_file.name)
             if series_name not in series_groups:
-                series_groups[series_name] = []
-            series_groups[series_name].append(file_path)
+                series_groups[series_name] = {
+                    'videos': [],
+                    'subtitles': []
+                }
+            series_groups[series_name]['videos'].append(video_file)
+            # Aggiungi i sottotitoli associati
+            series_groups[series_name]['subtitles'].extend(video_subtitle_map.get(video_file, []))
         
         print(f"📊 Rilevate {len(series_groups)} serie diverse")
         
         # Processa ogni serie
         for series_name, files in series_groups.items():
             print(f"\n{'='*80}")
-            print(f"📺 SERIE: {series_name} ({len(files)} file)")
+            video_count = len(files['videos'])
+            subtitle_count = len(files['subtitles'])
+            print(f"📺 SERIE: {series_name} ({video_count} video, {subtitle_count} sottotitoli)")
             print(f"{'='*80}")
             
             # Cerca e seleziona la serie
@@ -645,7 +770,7 @@ class TVSeriesRenamer:
                 format_style = self.select_format_style()
             
             # Processa i file di questa serie
-            self.process_series_files(files, selected_series, format_style, dry_run)
+            self.process_series_files(files['videos'], video_subtitle_map, selected_series, format_style, dry_run)
 
     def select_format_style(self):
         """Seleziona lo stile di formattazione"""
@@ -756,27 +881,27 @@ class TVSeriesRenamer:
         
         return files
 
-    def process_series_files(self, files, selected_series, format_style, dry_run):
-        """Processa i file di una specifica serie"""
+    def process_series_files(self, video_files, video_subtitle_map, selected_series, format_style, dry_run):
+        """Processa i file di una specifica serie (video e sottotitoli)"""
         series_id = selected_series.get('id')
         series_name = selected_series.get('name')
         source = selected_series.get('source')
         
         # Controllo duplicati e episodi mancanti
-        files = self.check_duplicates_and_gaps(files, selected_series)
+        video_files = self.check_duplicates_and_gaps(video_files, selected_series)
         
-        if not files:
+        if not video_files:
             print(self.get_text('no_files_process'))
             return
         
         renames = []
         duplicate_counter = {}
         
-        for file_path in files:
-            season, episode = self.extract_episode_info(file_path.name)
+        for video_file in video_files:
+            season, episode = self.extract_episode_info(video_file.name)
             
             if season is None or episode is None:
-                print(self.get_text('skip_unrecognized', file_path.name))
+                print(self.get_text('skip_unrecognized', video_file.name))
                 continue
             
             # Ottieni info episodio dalla fonte selezionata
@@ -801,26 +926,45 @@ class TVSeriesRenamer:
             # Gestione duplicati - aggiungi suffisso se necessario
             base_name = self.generate_filename(
                 series_name, season, episode, episode_title, 
-                file_path.suffix, format_style
+                video_file.suffix, format_style
             )
             
             # Controlla se questo nome base è già stato usato
             key = (season, episode)
+            version_suffix = ""
             if key in duplicate_counter:
                 duplicate_counter[key] += 1
-                # Aggiungi suffisso prima dell'estensione per versioni alternative
-                name_part, ext = base_name.rsplit('.', 1) if '.' in base_name else (base_name, '')
-                
                 # Il secondo file è [Versione 2], il terzo [Versione 3], etc.
                 version_number = duplicate_counter[key]
-                new_name = f"{name_part} [Versione {version_number}].{ext}" if ext else f"{name_part} [Versione {version_number}]"
+                version_suffix = f" [Versione {version_number}]"
+                
+                # Aggiungi suffisso prima dell'estensione
+                name_part, ext = base_name.rsplit('.', 1) if '.' in base_name else (base_name, '')
+                new_video_name = f"{name_part}{version_suffix}.{ext}" if ext else f"{name_part}{version_suffix}"
             else:
                 duplicate_counter[key] = 1
-                new_name = base_name
+                new_video_name = base_name
             
-            renames.append((file_path, new_name))
+            # Aggiungi il video alle rinomine
+            renames.append((video_file, new_video_name))
+            
+            # Processa i sottotitoli associati a questo video
+            subtitles_for_video = video_subtitle_map.get(video_file, [])
+            for subtitle_info in subtitles_for_video:
+                subtitle_file = subtitle_info['file']
+                subtitle_language = subtitle_info['language']
+                
+                # Genera il nome del sottotitolo basato sul nuovo nome del video
+                new_subtitle_name = self.generate_subtitle_filename(
+                    new_video_name, 
+                    subtitle_file.suffix, 
+                    subtitle_language, 
+                    version_suffix
+                )
+                
+                renames.append((subtitle_file, new_subtitle_name))
         
-        # Esegui rinomine senza l'elenco dettagliato
+        # Esegui rinomine
         if renames:
             self.execute_renames(renames, dry_run)
 
@@ -836,7 +980,7 @@ class TVSeriesRenamer:
         script_content = '''#!/usr/bin/env python3
 """
 Rollback Script - Universal TV Series Renamer
-Script automatico per ripristinare i nomi file originali
+Script automatico per ripristinare i nomi file originali (video e sottotitoli)
 
 Copyright (C) 2024 Andres Zanzani
 Licenza: GPL-3.0
@@ -901,11 +1045,29 @@ def main():
     print(f"✅ Trovati {len(files_found)} file da ripristinare")
     print()
     
+    # Separa video e sottotitoli per il conteggio
+    video_exts = {'.mkv', '.avi', '.mp4', '.m4v', '.mov', '.wmv', '.flv', '.webm', '.ts', '.m2ts'}
+    subtitle_exts = {'.srt', '.sub', '.ass', '.ssa', '.vtt', '.idx', '.sup'}
+    
+    videos = []
+    subtitles = []
+    
+    for new_path, old_name in files_found:
+        if new_path.suffix.lower() in video_exts:
+            videos.append((new_path, old_name))
+        elif new_path.suffix.lower() in subtitle_exts:
+            subtitles.append((new_path, old_name))
+    
+    print(f"📹 Video: {len(videos)}")
+    print(f"📝 Sottotitoli: {len(subtitles)}")
+    print()
+    
     # Mostra anteprima delle prime 5 rinomine
     print("📋 Anteprima delle rinomine (prime 5):")
     print("-" * 80)
     for i, (new_path, old_name) in enumerate(files_found[:5]):
-        print(f"{i+1:2d}. {new_path.name}")
+        file_type = "📹" if new_path.suffix.lower() in video_exts else "📝"
+        print(f"{i+1:2d}. {file_type} {new_path.name}")
         print(f"    ↳ {old_name}")
     
     if len(files_found) > 5:
@@ -941,7 +1103,8 @@ def main():
             
             # Esegui la rinomina
             new_path.rename(old_path)
-            print(f"✅ {new_path.name} → {old_name}")
+            file_type = "📹" if new_path.suffix.lower() in video_exts else "📝"
+            print(f"✅ {file_type} {new_path.name} → {old_name}")
             success_count += 1
             
         except Exception as e:
@@ -1050,15 +1213,28 @@ if __name__ == "__main__":
         print(f"{old_header:<{old_width}} | {new_header:<{new_width}}")
         print(f"{'-'*old_width}-+-{'-'*new_width}")
         
+        # Separatori per tipo di file
+        video_extensions = {'.mkv', '.avi', '.mp4', '.m4v', '.mov', '.wmv', '.flv', '.webm', '.ts', '.m2ts'}
+        subtitle_extensions = {'.srt', '.sub', '.ass', '.ssa', '.vtt', '.idx', '.sup'}
+        
         success = 0
         errors = 0
         
         for old_path, new_name in renames:
             new_path = old_path.parent / new_name
             
+            # Determina il tipo di file e aggiungi icona
+            file_ext = old_path.suffix.lower()
+            if file_ext in video_extensions:
+                icon = "📹"
+            elif file_ext in subtitle_extensions:
+                icon = "📝"
+            else:
+                icon = "📄"
+            
             # Tronca i nomi se necessario
-            old_display = self.truncate_filename(old_path.name, old_width)
-            new_display = self.truncate_filename(new_name, new_width)
+            old_display = f"{icon} {self.truncate_filename(old_path.name, old_width - 2)}"
+            new_display = f"{icon} {self.truncate_filename(new_name, new_width - 2)}"
             
             try:
                 if dry_run:
@@ -1066,7 +1242,7 @@ if __name__ == "__main__":
                     success += 1
                 else:
                     if new_path.exists():
-                        error_msg = self.truncate_filename(self.get_text('file_exists'), new_width)
+                        error_msg = f"{icon} {self.truncate_filename(self.get_text('file_exists'), new_width - 2)}"
                         print(f"{old_display:<{old_width}} | {error_msg:<{new_width}}")
                         errors += 1
                         continue
@@ -1076,7 +1252,8 @@ if __name__ == "__main__":
                     success += 1
                     
             except Exception as e:
-                error_msg = self.truncate_filename(f"{self.get_text('error')} {str(e)}", new_width)
+                error_text = f"{self.get_text('error')} {str(e)}"
+                error_msg = f"{icon} {self.truncate_filename(error_text, new_width - 2)}"
                 print(f"{old_display:<{old_width}} | {error_msg:<{new_width}}")
                 errors += 1
         
@@ -1115,19 +1292,26 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(
-        description="Universal TV Series Renamer v1.0 - by Andres Zanzani",
+        description="Universal TV Series Renamer v1.1 - by Andres Zanzani",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Universal TV Series Renamer
+Universal TV Series Renamer v1.1
 Copyright (C) 2024 Andres Zanzani
 Licenza: GPL-3.0
 
+NOVITÀ v1.1:
+✅ Supporto completo per sottotitoli (.srt, .sub, .ass, .ssa, .vtt)
+✅ Riconoscimento automatico delle lingue nei sottotitoli
+✅ Associazione intelligente sottotitoli-video
+✅ Gestione sottotitoli orfani
+✅ Script di rollback include i sottotitoli
+
 Esempi di utilizzo:
 
-  # Preview sicura
+  # Preview sicura (mostra video e sottotitoli)
   python3 tv_renamer.py /path/to/series
 
-  # Esecuzione reale
+  # Esecuzione reale (rinomina video e sottotitoli)
   python3 tv_renamer.py /path/to/series --execute
 
   # Ricerca ricorsiva in sottocartelle
@@ -1136,13 +1320,18 @@ Esempi di utilizzo:
   # Formato specifico con TMDB
   python3 tv_renamer.py /path/to/series --tmdb-key YOUR_KEY --format plex --execute
 
+Esempi di sottotitoli supportati:
+  - Meglio.Di.Noi.1x07.srt → Serie - [01x07] - Titolo Episodio.srt
+  - Meglio.Di.Noi.1x07.it.srt → Serie - [01x07] - Titolo Episodio.it.srt
+  - Meglio.Di.Noi.1x07.iTALiAN.srt → Serie - [01x07] - Titolo Episodio.it.srt
+
 Questo software è distribuito sotto licenza GPL-3.0.
 Per maggiori informazioni: https://www.gnu.org/licenses/gpl-3.0.html
         """
     )
     
     parser.add_argument('directory', 
-                       help='Directory contenente i file video')
+                       help='Directory contenente i file video e sottotitoli')
     parser.add_argument('--execute', action='store_true',
                        help='Esegui realmente le rinomine (default: solo preview)')
     parser.add_argument('--format', choices=['standard', 'plex', 'simple', 'minimal', 'kodi'],
@@ -1156,7 +1345,7 @@ Per maggiori informazioni: https://www.gnu.org/licenses/gpl-3.0.html
                        default='it', help='Lingua dell\'interfaccia del programma')
     parser.add_argument('--tmdb-key', help='API key per TMDB (opzionale)')
     parser.add_argument('--version', action='version', 
-                       version='Universal TV Series Renamer v1.0 - Copyright (C) 2024 Andres Zanzani - GPL-3.0')
+                       version='Universal TV Series Renamer v1.1 - Copyright (C) 2024 Andres Zanzani - GPL-3.0')
     parser.add_argument('--license', action='store_true', 
                        help='Mostra informazioni sulla licenza')
     
@@ -1165,7 +1354,7 @@ Per maggiori informazioni: https://www.gnu.org/licenses/gpl-3.0.html
     # Mostra licenza se richiesto
     if args.license:
         print("""
-Universal TV Series Renamer v1.0
+Universal TV Series Renamer v1.1
 Copyright (C) 2024 Andres Zanzani
 
 This program is free software: you can redistribute it and/or modify
@@ -1180,6 +1369,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+NOVITÀ v1.1:
+- Supporto completo per sottotitoli in tutti i formati principali
+- Riconoscimento automatico delle lingue nei sottotitoli
+- Associazione intelligente sottotitoli-video per stagione/episodio
+- Gestione sottotitoli orfani (senza video corrispondente)
+- Script di rollback esteso per includere i sottotitoli
 
 Per il testo completo della licenza GPL-3.0, visita:
 https://www.gnu.org/licenses/gpl-3.0.html
@@ -1223,8 +1419,10 @@ https://www.gnu.org/licenses/gpl-3.0.html
     if not args.execute:
         if renamer.interface_language == 'en':
             print(f"\n💡 To actually execute the renames, add --execute")
+            print(f"💡 This will rename both video files and their matching subtitles")
         else:
             print(f"\n💡 Per eseguire realmente le rinomine, aggiungi --execute")
+            print(f"💡 Questo rinominerà sia i file video che i sottotitoli corrispondenti")
 
 if __name__ == "__main__":
     main()
