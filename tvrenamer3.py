@@ -47,8 +47,140 @@ class TVSeriesRenamer:
             'User-Agent': 'UniversalTVRenamer/1.0',
             'Accept': 'application/json'
         })
-        self.language = 'it'  # Lingua di default
+        self.language = 'it'  # Lingua di default per episodi
+        self.interface_language = 'it'  # Lingua interfaccia
         
+        # Dizionari per i testi dell'interfaccia
+        self.texts = {
+            'it': {
+                'header': "📺 Universal TV Series Renamer v1.0",
+                'developer': "👨‍💻 Sviluppato da: Andres Zanzani",
+                'license': "📄 Licenza: GPL-3.0",
+                'directory': "📁 Directory:",
+                'format': "🎨 Formato:",
+                'episode_language': "🌍 Lingua episodi:",
+                'interface_language': "🗣️ Lingua interfaccia:",
+                'recursive': "🔄 Ricorsivo:",
+                'mode': "⚙️  Modalità:",
+                'preview': "PREVIEW",
+                'execution': "ESECUZIONE",
+                'yes': "Sì",
+                'no': "No",
+                'tmdb_configured': "✅ TMDB API key configurata",
+                'tmdb_register': "⚠️  TMDB non configurato - registra una chiave gratuita su https://www.themoviedb.org/settings/api",
+                'tvdb_auth_success': "✅ Autenticazione TheTVDB v4 riuscita",
+                'tvdb_auth_error': "❌ Errore autenticazione TheTVDB:",
+                'tvdb_not_available': "🔄 TheTVDB non disponibile, continuo con altre fonti",
+                'searching_for': "🔍 Ricerca in corso per:",
+                'searching_tmdb': "🔄 Ricerca su TMDB...",
+                'searching_tvdb': "🔄 Ricerca su TheTVDB...",
+                'searching_imdb': "🔄 Ricerca su IMDb...",
+                'search_results': "🔍 Risultati di ricerca per:",
+                'none_above': "❌ Nessuna delle opzioni sopra",
+                'different_search': "🔄 Ricerca con nome diverso",
+                'exit_program': "🚪 Esci dal programma",
+                'select_option': "Seleziona ({}, 0, r, q):",
+                'enter_new_name': "Inserisci nuovo nome per la ricerca",
+                'user_exit': "👋 Uscita richiesta dall'utente",
+                'invalid_selection': "❌ Selezione non valida!",
+                'duplicates_found': "⚠️  DUPLICATI RILEVATI: {} episodi hanno più file",
+                'episode_files_found': "🔄 S{:02d}E{:02d} - {} file trovati:",
+                'skip_episode': "❌ Salta questo episodio",
+                'rename_all_versions': "✅ Rinomina tutti i file (aggiungerà [Versione 2], [Versione 3], etc.)",
+                'which_file_keep': "Quale file tenere per S{:02d}E{:02d}? (1-{}, 0, a):",
+                'episodes_missing': "⚠️  EPISODI MANCANTI RILEVATI:",
+                'season_missing': "📺 Stagione {}: Mancano {}",
+                'verify_episodes': "💡 Suggerimento: Verifica se hai tutti gli episodi della serie",
+                'no_files_process': "❌ Nessun file da processare dopo i controlli",
+                'skip_unrecognized': "⚠️  SKIP: {} (formato non riconosciuto)",
+                'title_not_found': "⚠️  Titolo non trovato per S{:02d}E{:02d}",
+                'rollback_generated': "✅ Script di rollback generato: {}",
+                'rollback_instructions': "💡 Per ripristinare i nomi originali, esegui:",
+                'rollback_error': "❌ Errore nella generazione dello script di rollback: {}",
+                'confirm_rename': "⚠️  ATTENZIONE: Rinominare {} file?",
+                'confirm_prompt': "Confermi? [s/N]:",
+                'cancelled': "❌ Annullato",
+                'results_header': "📋 {} - {} file",
+                'original_name': "NOME ORIGINALE",
+                'new_name': "NUOVO NOME",
+                'results_final': "📊 RISULTATI: ✅ {} successi, ❌ {} errori",
+                'file_exists': "❌ File esiste già",
+                'error': "❌ ERRORE:",
+                'no_series_found': "❌ Nessuna serie trovata per: '{}'",
+                'suggestions': "💡 Suggerimenti:",
+                'check_spelling': "   - Verifica l'ortografia del nome",
+                'try_english': "   - Prova con il nome originale in inglese",
+                'use_shorter': "   - Usa un nome più breve"
+            },
+            'en': {
+                'header': "📺 Universal TV Series Renamer v1.0",
+                'developer': "👨‍💻 Developed by: Andres Zanzani",
+                'license': "📄 License: GPL-3.0",
+                'directory': "📁 Directory:",
+                'format': "🎨 Format:",
+                'episode_language': "🌍 Episode language:",
+                'interface_language': "🗣️ Interface language:",
+                'recursive': "🔄 Recursive:",
+                'mode': "⚙️  Mode:",
+                'preview': "PREVIEW",
+                'execution': "EXECUTION",
+                'yes': "Yes",
+                'no': "No",
+                'tmdb_configured': "✅ TMDB API key configured",
+                'tmdb_register': "⚠️  TMDB not configured - register a free key at https://www.themoviedb.org/settings/api",
+                'tvdb_auth_success': "✅ TheTVDB v4 authentication successful",
+                'tvdb_auth_error': "❌ TheTVDB authentication error:",
+                'tvdb_not_available': "🔄 TheTVDB not available, continuing with other sources",
+                'searching_for': "🔍 Searching for:",
+                'searching_tmdb': "🔄 Searching TMDB...",
+                'searching_tvdb': "🔄 Searching TheTVDB...",
+                'searching_imdb': "🔄 Searching IMDb...",
+                'search_results': "🔍 Search results for:",
+                'none_above': "❌ None of the above options",
+                'different_search': "🔄 Search with different name",
+                'exit_program': "🚪 Exit program",
+                'select_option': "Select ({}, 0, r, q):",
+                'enter_new_name': "Enter new name for search",
+                'user_exit': "👋 User requested exit",
+                'invalid_selection': "❌ Invalid selection!",
+                'duplicates_found': "⚠️  DUPLICATES DETECTED: {} episodes have multiple files",
+                'episode_files_found': "🔄 S{:02d}E{:02d} - {} files found:",
+                'skip_episode': "❌ Skip this episode",
+                'rename_all_versions': "✅ Rename all files (will add [Version 2], [Version 3], etc.)",
+                'which_file_keep': "Which file to keep for S{:02d}E{:02d}? (1-{}, 0, a):",
+                'episodes_missing': "⚠️  MISSING EPISODES DETECTED:",
+                'season_missing': "📺 Season {}: Missing {}",
+                'verify_episodes': "💡 Suggestion: Check if you have all episodes of the series",
+                'no_files_process': "❌ No files to process after checks",
+                'skip_unrecognized': "⚠️  SKIP: {} (unrecognized format)",
+                'title_not_found': "⚠️  Title not found for S{:02d}E{:02d}",
+                'rollback_generated': "✅ Rollback script generated: {}",
+                'rollback_instructions': "💡 To restore original names, run:",
+                'rollback_error': "❌ Error generating rollback script: {}",
+                'confirm_rename': "⚠️  WARNING: Rename {} files?",
+                'confirm_prompt': "Confirm? [y/N]:",
+                'cancelled': "❌ Cancelled",
+                'results_header': "📋 {} - {} files",
+                'original_name': "ORIGINAL NAME",
+                'new_name': "NEW NAME",
+                'results_final': "📊 RESULTS: ✅ {} successes, ❌ {} errors",
+                'file_exists': "❌ File already exists",
+                'error': "❌ ERROR:",
+                'no_series_found': "❌ No series found for: '{}'",
+                'suggestions': "💡 Suggestions:",
+                'check_spelling': "   - Check the spelling of the name",
+                'try_english': "   - Try with the original English name",
+                'use_shorter': "   - Use a shorter name"
+            }
+        }
+
+    def get_text(self, key, *args):
+        """Ottiene il testo tradotto per la lingua dell'interfaccia"""
+        text = self.texts.get(self.interface_language, self.texts['it']).get(key, key)
+        if args:
+            return text.format(*args)
+        return text
+
     def authenticate_tvdb(self):
         """Autentica con TheTVDB API v4"""
         try:
@@ -62,16 +194,16 @@ class TVSeriesRenamer:
                 self.tvdb_token = data.get('data', {}).get('token')
                 if self.tvdb_token:
                     self.session.headers.update({'Authorization': f'Bearer {self.tvdb_token}'})
-                    print("✅ Autenticazione TheTVDB v4 riuscita")
+                    print(self.get_text('tvdb_auth_success'))
                     return True
             else:
-                print(f"❌ Errore autenticazione TheTVDB: {response.status_code}")
+                print(self.get_text('tvdb_auth_error'), response.status_code)
                 
         except Exception as e:
-            print(f"⚠️  Errore autenticazione TheTVDB: {e}")
+            print(self.get_text('tvdb_auth_error'), e)
         
         # Fallback: disabilita TheTVDB
-        print("🔄 TheTVDB non disponibile, continuo con altre fonti")
+        print(self.get_text('tvdb_not_available'))
         return False
 
     def extract_series_info(self, filename):
@@ -121,7 +253,6 @@ class TVSeriesRenamer:
     def search_series_tmdb(self, series_name):
         """Cerca la serie su TMDB"""
         if not self.tmdb_api_key:
-            print("⚠️  TMDB API key non configurata - saltando TMDB")
             return []
             
         try:
@@ -153,12 +284,19 @@ class TVSeriesRenamer:
             else:
                 print(f"❌ Errore ricerca TMDB: {response.status_code}")
                 if response.status_code == 401:
-                    print("   💡 Registra una API key gratuita su https://www.themoviedb.org/settings/api")
+                    if self.interface_language == 'en':
+                        print("   💡 Register a free API key at https://www.themoviedb.org/settings/api")
+                    else:
+                        print("   💡 Registra una API key gratuita su https://www.themoviedb.org/settings/api")
                 
         except Exception as e:
-            print(f"❌ Errore nella ricerca TMDB: {e}")
+            if self.interface_language == 'en':
+                print(f"❌ Error in TMDB search: {e}")
+            else:
+                print(f"❌ Errore nella ricerca TMDB: {e}")
         
         return []
+
     def search_series_tvdb(self, series_name):
         """Cerca la serie su TheTVDB"""
         if not self.tvdb_token:
@@ -283,6 +421,7 @@ class TVSeriesRenamer:
             print(f"❌ Errore recupero episodio TMDB: {e}")
         
         return None
+
     def get_episode_info_tvdb(self, series_id, season, episode):
         """Ottieni informazioni episodio da TheTVDB"""
         if not self.tvdb_token:
@@ -316,14 +455,14 @@ class TVSeriesRenamer:
     def interactive_series_selection(self, results, series_name):
         """Interfaccia interattiva per selezione serie"""
         if not results:
-            print(f"❌ Nessuna serie trovata per: '{series_name}'")
-            print("\n💡 Suggerimenti:")
-            print("   - Verifica l'ortografia del nome")
-            print("   - Prova con il nome originale in inglese")
-            print("   - Usa un nome più breve")
+            print(self.get_text('no_series_found', series_name))
+            print(f"\n{self.get_text('suggestions')}")
+            print(self.get_text('check_spelling'))
+            print(self.get_text('try_english'))
+            print(self.get_text('use_shorter'))
             return None
         
-        print(f"\n🔍 Risultati di ricerca per: '{series_name}'")
+        print(f"\n{self.get_text('search_results')} '{series_name}'")
         print("=" * 80)
         
         for i, result in enumerate(results, 1):
@@ -358,86 +497,60 @@ class TVSeriesRenamer:
             if overview:
                 print()
         
-        print("0. ❌ Nessuna delle opzioni sopra")
-        print("r. 🔄 Ricerca con nome diverso")
-        print("q. 🚪 Esci dal programma")
+        print(f"0. {self.get_text('none_above')}")
+        print(f"r. {self.get_text('different_search')}")
+        print(f"q. {self.get_text('exit_program')}")
         
         while True:
             try:
-                choice = input("Seleziona (1-{}, 0, r, q): ".format(len(results))).strip().lower()
+                choice = input(self.get_text('select_option', f"1-{len(results)}")).strip().lower()
                 
                 if choice == '0':
                     return None
                 elif choice == 'r':
-                    new_name = input("Inserisci nuovo nome per la ricerca: ").strip()
+                    new_name = input(f"{self.get_text('enter_new_name')}: ").strip()
                     if new_name:
                         return self.search_and_select_series(new_name)
                     continue
                 elif choice == 'q':
-                    print("👋 Uscita richiesta dall'utente")
+                    print(self.get_text('user_exit'))
                     sys.exit(0)
                 else:
                     choice_num = int(choice) - 1
                     if 0 <= choice_num < len(results):
                         return results[choice_num]
                     else:
-                        print("❌ Selezione non valida!")
+                        print(self.get_text('invalid_selection'))
                         
             except (ValueError, KeyboardInterrupt):
                 if choice == 'q':
                     sys.exit(0)
-                print("❌ Selezione non valida!")
+                print(self.get_text('invalid_selection'))
             except KeyboardInterrupt:
-                print("\n👋 Uscita richiesta dall'utente")
+                print(f"\n{self.get_text('user_exit')}")
                 sys.exit(0)
 
-    def select_language(self):
-        """Seleziona la lingua per titoli episodi"""
-        languages = {
-            "1": ("it", "Italiano"),
-            "2": ("en", "English"),
-            "3": ("es", "Español"),
-            "4": ("fr", "Français"),
-            "5": ("de", "Deutsch")
-        }
-        
-        print("\n🌍 Scegli la lingua per i titoli degli episodi:")
-        for key, (code, name) in languages.items():
-            print(f"{key}. {name} ({code})")
-        
-        while True:
-            choice = input("Scegli lingua (1-5, o premi Enter per italiano): ").strip()
-            if choice == "":
-                self.language = "it"
-                print("✅ Lingua selezionata: Italiano")
-                return
-            elif choice in languages:
-                code, name = languages[choice]
-                self.language = code
-                print(f"✅ Lingua selezionata: {name}")
-                return
-            print("❌ Scelta non valida!")
     def search_and_select_series(self, series_name):
         """Cerca e seleziona una serie da tutte le fonti"""
-        print(f"\n🔍 Ricerca in corso per: '{series_name}'")
+        print(f"\n{self.get_text('searching_for')} '{series_name}'")
         
         all_results = []
         
         # Cerca su TMDB prima (di solito ha dati migliori)
         if self.tmdb_api_key:
-            print("🔄 Ricerca su TMDB...")
+            print(self.get_text('searching_tmdb'))
             tmdb_results = self.search_series_tmdb(series_name)
             all_results.extend(tmdb_results)
         
         # Poi TheTVDB
         if self.tvdb_token:
-            print("🔄 Ricerca su TheTVDB...")
+            print(self.get_text('searching_tvdb'))
             tvdb_results = self.search_series_tvdb(series_name)
             all_results.extend(tvdb_results)
         
         # Infine IMDb come fallback
         if len(all_results) < 3:  # Solo se non abbiamo abbastanza risultati
-            print("🔄 Ricerca su IMDb...")
+            print(self.get_text('searching_imdb'))
             imdb_results = self.search_series_imdb_web(series_name)
             all_results.extend(imdb_results)
         
@@ -577,19 +690,19 @@ class TVSeriesRenamer:
         
         # Gestisci duplicati
         if duplicates:
-            print(f"\n⚠️  DUPLICATI RILEVATI: {len(duplicates)} episodi hanno più file")
+            print(f"\n{self.get_text('duplicates_found', len(duplicates))}")
             for season, episode, file_list in duplicates:
-                print(f"\n🔄 S{season:02d}E{episode:02d} - {len(file_list)} file trovati:")
+                print(f"\n{self.get_text('episode_files_found', season, episode, len(file_list))}")
                 for i, file_path in enumerate(file_list, 1):
                     size = file_path.stat().st_size / (1024**3)  # Size in GB
                     print(f"   {i}. {file_path.name} ({size:.1f} GB)")
                 
-                print("   0. ❌ Salta questo episodio")
-                print("   a. ✅ Rinomina tutti i file (aggiungerà [Versione 2], [Versione 3], etc.)")
+                print(f"   0. {self.get_text('skip_episode')}")
+                print(f"   a. {self.get_text('rename_all_versions')}")
                 
                 while True:
                     try:
-                        choice = input(f"Quale file tenere per S{season:02d}E{episode:02d}? (1-{len(file_list)}, 0, a): ").strip().lower()
+                        choice = input(self.get_text('which_file_keep', season, episode, len(file_list))).strip().lower()
                         
                         if choice == '0':
                             # Rimuovi tutti i file di questo episodio dalla lista
@@ -610,9 +723,9 @@ class TVSeriesRenamer:
                                         files.remove(f)
                                 break
                             else:
-                                print("❌ Scelta non valida!")
+                                print(self.get_text('invalid_selection'))
                     except (ValueError, KeyboardInterrupt):
-                        print("❌ Scelta non valida!")
+                        print(self.get_text('invalid_selection'))
         
         # Controlla episodi mancanti
         if episodes_found:
@@ -634,14 +747,15 @@ class TVSeriesRenamer:
                         gaps_found.append((season, sorted(missing_episodes)))
             
             if gaps_found:
-                print(f"\n⚠️  EPISODI MANCANTI RILEVATI:")
+                print(f"\n{self.get_text('episodes_missing')}")
                 for season, missing in gaps_found:
                     missing_str = ', '.join([f"E{ep:02d}" for ep in missing])
-                    print(f"   📺 Stagione {season}: Mancano {missing_str}")
+                    print(f"   {self.get_text('season_missing', season, missing_str)}")
                 
-                print("\n💡 Suggerimento: Verifica se hai tutti gli episodi della serie")
+                print(f"\n{self.get_text('verify_episodes')}")
         
         return files
+
     def process_series_files(self, files, selected_series, format_style, dry_run):
         """Processa i file di una specifica serie"""
         series_id = selected_series.get('id')
@@ -652,7 +766,7 @@ class TVSeriesRenamer:
         files = self.check_duplicates_and_gaps(files, selected_series)
         
         if not files:
-            print("❌ Nessun file da processare dopo i controlli")
+            print(self.get_text('no_files_process'))
             return
         
         renames = []
@@ -662,7 +776,7 @@ class TVSeriesRenamer:
             season, episode = self.extract_episode_info(file_path.name)
             
             if season is None or episode is None:
-                print(f"⚠️  SKIP: {file_path.name} (formato non riconosciuto)")
+                print(self.get_text('skip_unrecognized', file_path.name))
                 continue
             
             # Ottieni info episodio dalla fonte selezionata
@@ -716,7 +830,7 @@ class TVSeriesRenamer:
             return shutil.get_terminal_size().columns
         except:
             return 120  # Fallback se non riesce a rilevare
-    
+
     def generate_rollback_script(self, renames, directory):
         """Genera uno script Python per ripristinare i nomi originali"""
         script_content = '''#!/usr/bin/env python3
@@ -871,8 +985,8 @@ if __name__ == "__main__":
                 import stat
                 script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC)
             
-            print(f"✅ Script di rollback generato: {script_path}")
-            print("💡 Per ripristinare i nomi originali, esegui:")
+            print(self.get_text('rollback_generated', script_path))
+            print(self.get_text('rollback_instructions'))
             if os.name == 'nt':  # Windows
                 print(f"   python \"{script_path}\"")
             else:  # Linux/Mac
@@ -880,17 +994,24 @@ if __name__ == "__main__":
                 print(f"   oppure: ./{script_path.name}")
             
         except Exception as e:
-            print(f"❌ Errore nella generazione dello script di rollback: {e}")
-    
+            print(self.get_text('rollback_error', e))
+
     def execute_renames(self, renames, dry_run=True):
         """Esegue le rinomine con formato tabella adattivo"""
         if not renames:
             return
         
         if not dry_run:
-            print(f"\n⚠️  ATTENZIONE: Rinominare {len(renames)} file?")
-            if input("Confermi? [s/N]: ").strip().lower() not in ['s', 'si', 'sì']:
-                print("❌ Annullato")
+            confirm_text = self.get_text('confirm_rename', len(renames))
+            prompt_text = self.get_text('confirm_prompt')
+            
+            print(f"\n{confirm_text}")
+            response = input(prompt_text).strip().lower()
+            
+            valid_yes = ['s', 'si', 'sì', 'y', 'yes'] if self.interface_language == 'it' else ['y', 'yes', 's', 'si', 'sì']
+            
+            if response not in valid_yes:
+                print(self.get_text('cancelled'))
                 return
         
         terminal_width = self.get_terminal_width()
@@ -917,11 +1038,16 @@ if __name__ == "__main__":
             new_width = available_width - old_width
         
         print(f"\n{'='*terminal_width}")
-        print(f"📋 {'PREVIEW' if dry_run else 'RINOMINE'} - {len(renames)} file")
+        header_text = self.get_text('results_header', 
+                                   self.get_text('execution') if not dry_run else self.get_text('preview'), 
+                                   len(renames))
+        print(header_text)
         print(f"{'='*terminal_width}")
         
         # Header tabella
-        print(f"{'NOME ORIGINALE':<{old_width}} | {'NUOVO NOME':<{new_width}}")
+        old_header = self.get_text('original_name')
+        new_header = self.get_text('new_name')
+        print(f"{old_header:<{old_width}} | {new_header:<{new_width}}")
         print(f"{'-'*old_width}-+-{'-'*new_width}")
         
         success = 0
@@ -940,7 +1066,7 @@ if __name__ == "__main__":
                     success += 1
                 else:
                     if new_path.exists():
-                        error_msg = self.truncate_filename("❌ File esiste già", new_width)
+                        error_msg = self.truncate_filename(self.get_text('file_exists'), new_width)
                         print(f"{old_display:<{old_width}} | {error_msg:<{new_width}}")
                         errors += 1
                         continue
@@ -950,18 +1076,18 @@ if __name__ == "__main__":
                     success += 1
                     
             except Exception as e:
-                error_msg = self.truncate_filename(f"❌ ERRORE: {str(e)}", new_width)
+                error_msg = self.truncate_filename(f"{self.get_text('error')} {str(e)}", new_width)
                 print(f"{old_display:<{old_width}} | {error_msg:<{new_width}}")
                 errors += 1
         
         print(f"{'-'*old_width}-+-{'-'*new_width}")
-        print(f"📊 RISULTATI: ✅ {success} successi, ❌ {errors} errori")
+        print(self.get_text('results_final', success, errors))
         
         # Genera script di rollback solo se ci sono stati successi e non è dry run
         if not dry_run and success > 0:
             directory = renames[0][0].parent  # Prendi la directory dal primo file
             self.generate_rollback_script(renames, directory)
-    
+
     def truncate_filename(self, filename, max_width):
         """Tronca intelligentemente il nome del file"""
         if len(filename) <= max_width:
@@ -983,6 +1109,7 @@ if __name__ == "__main__":
         
         # Fallback: tronca semplicemente
         return filename[:max_width-3] + "..."
+
 
 def main():
     import argparse
@@ -1014,13 +1141,19 @@ Per maggiori informazioni: https://www.gnu.org/licenses/gpl-3.0.html
         """
     )
     
-    parser.add_argument('directory', help='Directory con i file video')
-    parser.add_argument('--execute', action='store_true', help='Esegui le rinomine (default: solo preview)')
-    parser.add_argument('--format', choices=['standard', 'plex', 'simple', 'minimal', 'kodi'], 
-                       default='standard', help='Formato nome file')
-    parser.add_argument('--recursive', action='store_true', help='Cerca ricorsivamente nelle sottocartelle')
+    parser.add_argument('directory', 
+                       help='Directory contenente i file video')
+    parser.add_argument('--execute', action='store_true',
+                       help='Esegui realmente le rinomine (default: solo preview)')
+    parser.add_argument('--format', choices=['standard', 'plex', 'simple', 'minimal', 'kodi'],
+                       default='standard',
+                       help='Formato del nome file (default: standard)')
+    parser.add_argument('--recursive', action='store_true',
+                       help='Cerca ricorsivamente nelle sottocartelle')
     parser.add_argument('--language', choices=['it', 'en', 'es', 'fr', 'de'], 
                        default='it', help='Lingua per i titoli degli episodi')
+    parser.add_argument('--interface', choices=['it', 'en'], 
+                       default='it', help='Lingua dell\'interfaccia del programma')
     parser.add_argument('--tmdb-key', help='API key per TMDB (opzionale)')
     parser.add_argument('--version', action='version', 
                        version='Universal TV Series Renamer v1.0 - Copyright (C) 2024 Andres Zanzani - GPL-3.0')
@@ -1057,31 +1190,29 @@ https://www.gnu.org/licenses/gpl-3.0.html
         print(f"❌ ERRORE: '{args.directory}' non è una directory valida!")
         sys.exit(1)
     
-    print("📺 Universal TV Series Renamer v1.0")
-    print("👨‍💻 Sviluppato da: Andres Zanzani")
-    print("📄 Licenza: GPL-3.0")
-    print("=" * 50)
-    print(f"📁 Directory: {os.path.abspath(args.directory)}")
-    print(f"🎨 Formato: {args.format}")
-    print(f"🌍 Lingua: {args.language}")
-    print(f"🔄 Ricorsivo: {'Sì' if args.recursive else 'No'}")
-    print(f"⚙️  Modalità: {'ESECUZIONE' if args.execute else 'PREVIEW'}")
-    print("=" * 50)
-    
     renamer = TVSeriesRenamer()
     renamer.recursive = args.recursive
     renamer.language = args.language
+    renamer.interface_language = args.interface
+    
+    print(renamer.get_text('header'))
+    print(renamer.get_text('developer'))
+    print(renamer.get_text('license'))
+    print("=" * 50)
+    print(f"{renamer.get_text('directory')} {os.path.abspath(args.directory)}")
+    print(f"{renamer.get_text('format')} {args.format}")
+    print(f"{renamer.get_text('episode_language')} {args.language}")
+    print(f"{renamer.get_text('interface_language')} {args.interface}")
+    print(f"{renamer.get_text('recursive')} {renamer.get_text('yes') if args.recursive else renamer.get_text('no')}")
+    print(f"{renamer.get_text('mode')} {renamer.get_text('execution') if args.execute else renamer.get_text('preview')}")
+    print("=" * 50)
     
     # Configura TMDB se fornita
     if args.tmdb_key:
         renamer.tmdb_api_key = args.tmdb_key
-        print("✅ TMDB API key configurata")
+        print(renamer.get_text('tmdb_configured'))
     elif not renamer.tmdb_api_key:
-        print("⚠️  TMDB non configurato - registra una chiave gratuita su https://www.themoviedb.org/settings/api")
-    
-    # Selezione lingua interattiva se non specificata
-    if not args.execute:  # Solo in modalità preview
-        renamer.select_language()
+        print(renamer.get_text('tmdb_register'))
     
     # Autentica con TheTVDB
     renamer.authenticate_tvdb()
@@ -1090,7 +1221,10 @@ https://www.gnu.org/licenses/gpl-3.0.html
     renamer.process_files(args.directory, args.format, dry_run=not args.execute)
     
     if not args.execute:
-        print(f"\n💡 Per eseguire realmente le rinomine, aggiungi --execute")
+        if renamer.interface_language == 'en':
+            print(f"\n💡 To actually execute the renames, add --execute")
+        else:
+            print(f"\n💡 Per eseguire realmente le rinomine, aggiungi --execute")
 
 if __name__ == "__main__":
     main()
