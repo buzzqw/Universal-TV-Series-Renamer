@@ -2,8 +2,8 @@ This python script takes care of renaming TV series.
 
 
 tttt@zzzz:~/kkkk/Fallout$ python3 tvrenamer3.py 
-'usage: tvrenamer3.py [-h] [--execute] [--format {standard,plex,simple,minimal,kodi}] [--recursive] [--language {it,en,es,fr,de}] [--interface {it,en}]
-                     [--tmdb-key TMDB_KEY] [--version] [--license]'
+'''usage: tvrenamer3.py [-h] [--execute] [--format {standard,plex,simple,minimal,kodi}] [--recursive] [--language {it,en,es,fr,de}] [--interface {it,en}]
+                     [--tmdb-key TMDB_KEY] [--version] [--license]'''
                      directory
 tvrenamer3.py: error: the following arguments are required: directory
 andres@debminis:~/SerieTVArchivio/Fallout$ 
