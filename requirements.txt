@@ -1,0 +1,27 @@
+# Universal TV Series Renamer - Requirements
+# Dipendenze per lo script di rinomina automatica delle serie TV
+# Versione: 1.1
+# Autore: Andres Zanzani
+# Licenza: GPL-3.0
+
+# Libreria principale per richieste HTTP alle API
+# Utilizzata per interrogare TMDB, TheTVDB e IMDb
+requests>=2.25.0
+
+# Librerie standard Python utilizzate (non richiedono installazione):
+# - os (gestione file system)
+# - re (espressioni regolari)
+# - json (parsing JSON dalle API)
+# - sys (funzionalità sistema)
+# - time (gestione tempo e sleep)
+# - html (decodifica caratteri HTML)
+# - shutil (operazioni file avanzate)
+# - pathlib.Path (gestione percorsi moderna)
+# - urllib.parse (encoding URL)
+# - argparse (parsing argomenti command line)
+# - stat (permessi file per rollback script)
+
+# Note:
+# - Lo script è compatibile con Python 3.6+
+# - Non richiede dipendenze aggiuntive oltre a 'requests'
+# - Tutte le altre funzionalità utilizzano librerie standard Python
