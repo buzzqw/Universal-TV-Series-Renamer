@@ -52,7 +52,7 @@ cd Universal-TV-Series-Renamer
 pip install -r requirements.txt
 
 # Make executable (Linux/macOS)
-chmod +x tvrenamer4.py
+chmod +x tvrenamer3.py
 ```
 
 ### TMDB API Key (Optional but Recommended)
@@ -68,29 +68,29 @@ For better episode title quality:
 
 ```bash
 # Safe preview (recommended for first time)
-python3 tvrenamer4.py /path/to/series
+python3 tvrenamer3.py /path/to/series
 
 # Actual execution
-python3 tvrenamer4.py /path/to/series --execute
+python3 tvrenamer3.py /path/to/series --execute
 
 # With TMDB API key for better results
-python3 tvrenamer4.py /path/to/series --tmdb-key YOUR_API_KEY --execute
+python3 tvrenamer3.py /path/to/series --tmdb-key YOUR_API_KEY --execute
 ```
 
 ### Advanced Options
 
 ```bash
 # Episode titles in English
-python3 tvrenamer4.py --language en /path/to/series --tmdb-key YOUR_KEY
+python3 tvrenamer3.py --language en /path/to/series --tmdb-key YOUR_KEY
 
 # Complete English interface
-python3 tvrenamer4.py --interface en --language en /path/to/series --tmdb-key YOUR_KEY
+python3 tvrenamer3.py --interface en --language en /path/to/series --tmdb-key YOUR_KEY
 
 # Plex-compatible format
-python3 tvrenamer4.py --format plex /path/to/series --tmdb-key YOUR_KEY --execute
+python3 tvrenamer3.py --format plex /path/to/series --tmdb-key YOUR_KEY --execute
 
 # Recursive search in subfolders
-python3 tvrenamer4.py --recursive /path/to/series --tmdb-key YOUR_KEY --execute
+python3 tvrenamer3.py --recursive /path/to/series --tmdb-key YOUR_KEY --execute
 ```
 
 ### All Parameters
@@ -312,7 +312,7 @@ cd Universal-TV-Series-Renamer
 pip install -r requirements.txt
 
 # Rendi eseguibile (Linux/macOS)
-chmod +x tvrenamer4.py
+chmod +x tvrenamer3.py
 ```
 
 ### API Key TMDB (Opzionale ma Raccomandato)
@@ -328,29 +328,29 @@ Per ottenere titoli episodi di qualità migliore:
 
 ```bash
 # Preview sicura (raccomandato per la prima volta)
-python3 tvrenamer4.py /path/to/series
+python3 tvrenamer3.py /path/to/series
 
 # Esecuzione reale
-python3 tvrenamer4.py /path/to/series --execute
+python3 tvrenamer3.py /path/to/series --execute
 
 # Con API key TMDB per risultati migliori
-python3 tvrenamer4.py /path/to/series --tmdb-key YOUR_API_KEY --execute
+python3 tvrenamer3.py /path/to/series --tmdb-key YOUR_API_KEY --execute
 ```
 
 ### Opzioni Avanzate
 
 ```bash
 # Titoli episodi in inglese
-python3 tvrenamer4.py --language en /path/to/series --tmdb-key YOUR_KEY
+python3 tvrenamer3.py --language en /path/to/series --tmdb-key YOUR_KEY
 
 # Interfaccia completamente in inglese
-python3 tvrenamer4.py --interface en --language en /path/to/series --tmdb-key YOUR_KEY
+python3 tvrenamer3.py --interface en --language en /path/to/series --tmdb-key YOUR_KEY
 
 # Formato compatibile con Plex
-python3 tvrenamer4.py --format plex /path/to/series --tmdb-key YOUR_KEY --execute
+python3 tvrenamer3.py --format plex /path/to/series --tmdb-key YOUR_KEY --execute
 
 # Ricerca ricorsiva nelle sottocartelle
-python3 tvrenamer4.py --recursive /path/to/series --tmdb-key YOUR_KEY --execute
+python3 tvrenamer3.py --recursive /path/to/series --tmdb-key YOUR_KEY --execute
 ```
 
 ### Tutti i Parametri
