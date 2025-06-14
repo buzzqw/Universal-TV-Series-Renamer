@@ -1,155 +1,256 @@
-# TV Series Renamer Documentation
-
-This Python script takes care of renaming TV series files with proper episode information.
-
-## Usage
-
-```bash
-python3 tvrenamer3.py [-h] [--execute] [--format {standard,plex,simple,minimal,kodi}] [--recursive] [--language {it,en,es,fr,de}] [--interface {it,en}] [--tmdb-key TMDB_KEY] [--version] [--license] directory
-```
-
-### Required Arguments
-- `directory` - The directory containing the TV series files
-
-### Optional Arguments
-- `--execute` - Actually perform the renaming (without this flag, it runs in preview mode)
-- `--format` - Choose naming format: standard, plex, simple, minimal, kodi
-- `--recursive` - Process subdirectories recursively
-- `--language` - Episode title language: it, en, es, fr, de
-- `--interface` - Interface language: it, en
-- `--tmdb-key` - TMDB API key for episode information
-
-## Example Usage
-
-### Preview Mode (Safe - No Changes)
-```bash
-python3 tvrenamer3.py . --tmdb-key YOUR-API-KEY
-```
-
-### Execution Mode (Actually Renames Files)
-```bash
-python3 tvrenamer3.py . --tmdb-key YOUR-API-KEY --execute --interface en --language en
-```
-
-**If you like this project please offer a coffe!**  [PayPalME](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)
-
-## Sample Output
-
-### Preview Mode Example
-```
-📺 Universal TV Series Renamer v1.0
-👨‍💻 Sviluppato da: Andres Zanzani
-📄 Licenza: GPL-3.0
-==================================================
-📁 Directory: /xxx/yyyy/zzzz/INeedMoreHACKS
-🎨 Formato: standard
-🌍 Lingua: en
-🔄 Ricorsivo: No
-⚙️  Modalità: PREVIEW
-==================================================
-✅ TMDB API key configurata
-
-📁 Trovati 8 file video
-📊 Rilevate 1 serie diverse
-
-================================================================================
-📺 SERIE: INeedMoreHACKS (8 file)
-================================================================================
-
-🔍 Ricerca in corso per: 'INeedMoreHACKS'
-🔄 Ricerca su TMDB...
-
-🔍 Risultati di ricerca per: 'INeedMoreHACKS'
-================================================================================
- 1. TMDB | INeedMoreHACKS | 2024 | ⭐ 8.3/10
-    └─ The story of haves and have-nots in a world in which there's almost nothing left to have. 800 years ...
-
- 2. TMDB | INeedMoreHACKS: Nuka Break | 2011 | ⭐ 7.7/10
- 3. TMDB | INeedMoreHACKS: The Wanderer | 2017 | ⭐ 8.0/10
-    └─ This origin story follows the not-so-NCR Ranger, James Puppa in the Bestland, and his first enco...
-
-0. ❌ Nessuna delle opzioni sopra
-r. 🔄 Ricerca con nome diverso
-q. 🚪 Esci dal programma
-```
-
-### Renaming Preview Table
-| Original Name | New Name |
-|---------------|----------|
-| `INeedMoreHACKS.S01E01.La.fine.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x01] - The End.mkv` |
-| `INeedMoreHACKS.S01E02.L.obiettivo.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x02] - The Target.mkv` |
-| `INeedMoreHACKS.S01E03.La.testa.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x03] - The Head.mkv` |
-| `INeedMoreHACKS.S01E04.Il.Ghoul.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x04] - The Ghouls.mkv` |
-| `INeedMoreHACKS.S01E05.Il.passato.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x05] - The Past.mkv` |
-| `INeedMoreHACKS.S01E06.La.Trappola.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x06] - The Trap.mkv` |
-| `INeedMoreHACKS.S01E07.La.Radio.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x07] - The Radio.mkv` |
-| `INeedMoreHACKS.S01E08.Il.principio.ITA.ENG.2160p.AMZN.WEB-DL.DDP5.1.DV.HDR.H.265-MeM.GP.mkv` | `INeedMoreHACKS - [01x08] - The Beginning.mkv` |
-
-### Execution Results
-```
-📊 RESULTS: ✅ 8 successes, ❌ 0 errors
-✅ Rollback script generated: rollback_renamer.py
-💡 **To restore original names, run**:
-   python3 "rollback_renamer.py"
-   or: ./rollback_renamer.py
-```
-
-## After Execution - Directory Listing
-```
-'INeedMoreHACKS - [01x01] - The End.mkv'
-'INeedMoreHACKS - [01x02] - The Target.mkv'
-'INeedMoreHACKS - [01x03] - The Head.mkv'
-'INeedMoreHACKS - [01x04] - The Ghouls.mkv'
-'INeedMoreHACKS - [01x05] - The Past.mkv'
-'INeedMoreHACKS - [01x06] - The Trap.mkv'
-'INeedMoreHACKS - [01x07] - The Radio.mkv'
-'INeedMoreHACKS - [01x08] - The Beginning.mkv'
-rollback_renamer.py
-```
-
-## Naming Formats
-
-The script supports multiple naming formats:
-
-1. **STANDARD**: `Serie - [01x01] - Episodio.mkv`
-2. **PLEX**: `Serie - S01E01 - Episodio.mkv`
-3. **SIMPLE**: `Serie 1x01 Episodio.mkv`
-4. **MINIMAL**: `Serie S01E01.mkv`
-5. **KODI**: `Serie S01E01 Episodio.mkv`
-
-## Important Notes
-
-- ⚠️ **Always run in preview mode first** to check the results before executing
-- 🔄 **Rollback script is automatically generated** for safety
-- 📡 **Requires TMDB API key** for episode information
-- 🌍 **Supports multiple languages** for episode titles
-- 🔍 **Interactive series selection** when multiple matches are found
-
-## Safety Features
-
-- Preview mode shows exactly what will be renamed
-- Automatic rollback script generation
-- Confirmation prompt before execution
-- Error handling and reporting
-- 
-----
-
-
-
-# Universal TV Series Renamer
+# 📺 Universal TV Series Renamer
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/andres-zanzani/universal-tv-renamer)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/buzzqw/Universal-TV-Series-Renamer)
 
+🌍 **[English](#english-documentation) | [Italiano](#documentazione-italiana)**
 
-**Script universale per rinominare automaticamente episodi di qualsiasi serie TV** interrogando **TMDB**, **TheTVDB** e **IMDb** per ottenere informazioni accurate sui titoli degli episodi.
+---
+
+## 💝 Support the Project
+
+**If you find this project useful, please consider supporting development:**
+
+[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)
+
+**[💰 Donate via PayPal](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)**
+
+Your support helps maintain and improve this free tool for the community! 🙏
+
+---
+
+# English Documentation
+
+**Universal script to automatically rename TV series episodes** by querying **TMDB**, **TVMaze**, and **IMDb** to get accurate episode title information.
+
+## 🎯 Key Features
+
+- 📺 **Universal**: Works with any TV series, not just specific ones
+- 🌐 **Multi-source**: Integration with TMDB, TVMaze, and IMDb
+- 🗣️ **Multilingual Interface**: English and Italian support
+- 🎨 **5 Output Formats**: Standard, Plex, Simple, Minimal, Kodi
+- 🔍 **Duplicate Management**: Smart choice between multiple versions
+- 📊 **Missing Episodes**: Detects "gaps" in episode numbering
+- 📋 **Adaptive Table**: Adjusts to terminal width
+- 🔄 **Rollback Script**: Automatically restores original names
+- 🛡️ **Safe Mode**: Preview before execution
+
+## 🚀 Quick Installation
+
+### Prerequisites
+- Python 3.6 or higher
+- pip (Python package manager)
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/buzzqw/Universal-TV-Series-Renamer.git
+cd Universal-TV-Series-Renamer
+
+# Install dependencies
+pip install requests
+
+# Make executable (Linux/macOS)
+chmod +x tvrenamer4.py
+```
+
+### TMDB API Key (Optional but Recommended)
+For better episode title quality:
+1. Register at [TheMovieDB](https://www.themoviedb.org/)
+2. Go to [API Settings](https://www.themoviedb.org/settings/api)
+3. Request a free API key
+4. Use `--tmdb-key YOUR_KEY` option with the script
+
+## 📖 Usage
+
+### Basic Examples
+
+```bash
+# Safe preview (recommended for first time)
+python3 tvrenamer4.py /path/to/series
+
+# Actual execution
+python3 tvrenamer4.py /path/to/series --execute
+
+# With TMDB API key for better results
+python3 tvrenamer4.py /path/to/series --tmdb-key YOUR_API_KEY --execute
+```
+
+### Advanced Options
+
+```bash
+# Episode titles in English
+python3 tvrenamer4.py --language en /path/to/series --tmdb-key YOUR_KEY
+
+# Complete English interface
+python3 tvrenamer4.py --interface en --language en /path/to/series --tmdb-key YOUR_KEY
+
+# Plex-compatible format
+python3 tvrenamer4.py --format plex /path/to/series --tmdb-key YOUR_KEY --execute
+
+# Recursive search in subfolders
+python3 tvrenamer4.py --recursive /path/to/series --tmdb-key YOUR_KEY --execute
+```
+
+### All Parameters
+
+| Parameter | Values | Default | Description |
+|-----------|--------|---------|-------------|
+| `--language` | `it`, `en`, `es`, `fr`, `de` | `it` | Language for episode titles |
+| `--interface` | `it`, `en` | `it` | User interface language |
+| `--format` | `standard`, `plex`, `simple`, `minimal`, `kodi` | `standard` | Output filename format |
+| `--tmdb-key` | `API_KEY` | - | TMDB API key (optional) |
+| `--recursive` | - | `false` | Search recursively in subfolders |
+| `--execute` | - | `false` | Execute renames (default: preview only) |
+| `--version` | - | - | Show version and copyright |
+
+## 🎨 Output Formats
+
+### Standard (Default)
+```
+TV Series - [01x01] - Episode Title.mkv
+TV Series - [02x05] - Another Episode.mkv
+```
+
+### Plex
+```
+TV Series - S01E01 - Episode Title.mkv
+TV Series - S02E05 - Another Episode.mkv
+```
+
+### Simple
+```
+TV Series 1x01 Episode Title.mkv
+TV Series 2x05 Another Episode.mkv
+```
+
+### Minimal
+```
+TV Series S01E01.mkv
+TV Series S02E05.mkv
+```
+
+### Kodi
+```
+TV Series S01E01 Episode Title.mkv
+TV Series S02E05 Another Episode.mkv
+```
+
+## 📋 Example Output
+
+```
+📺 Universal TV Series Renamer v1.2 (Clean)
+👨‍💻 Developed by: Andres Zanzani
+📄 License: GPL-3.0
+==================================================
+📁 Directory: /home/user/Series/Circuit.Breakers
+🎨 Format: standard
+🌍 Language: en
+🔄 Recursive: No
+⚙️  Mode: PREVIEW
+==================================================
+✅ TMDB configured
+✅ TVMaze configured
+✅ IMDb configured
+🔗 Active providers: TMDB, TVMaze, IMDb
+
+📁 Found 7 video files
+
+================================================================================
+📺 SERIES: Circuit Breakers (7 files)
+================================================================================
+🔍 Searching for: 'Circuit Breakers'
+🔄 Searching on TMDB...
+✅ 1 results from TMDB
+🔄 Searching on TVMaze...
+✅ 1 results from TVMaze
+🔄 Searching on IMDb...
+✅ 3 results from IMDb
+
+🔍 Results for: 'Circuit Breakers':
+================================================================================
+ 1. TMDB | Circuit Breakers | 2022 | ⭐ 6.4/10
+    └─ This futuristic anthology series tackles children's issues through...
+ 2. TVMaze | Circuit Breakers | 2022 | ⭐ 3.3/10
+    └─ Circuit Breakers is a half-hour thought-provoking futuristic anthology...
+ 3. IMDb (tt21942776) | Circuit Breakers | ⭐ 5.5/10
+    └─ Follow the futuristic anthology as it tackles children's issues...
+
+Select (1-3, 0, q): 1
+
+📋 EXECUTION - 7 files
+========================================================================================================================
+STATUS   ORIGINAL FILE                                      NEW FILE                                        
+------------------------------------------------------------------------------------------------------------------------
+✅ DONE   Circuit Breakers - [01x01] - Episode 1.mkv         Circuit Breakers - [01x01] - Test Subject 13.mkv  
+✅ DONE   Circuit Breakers - [01x02] - Episode 2.mkv         Circuit Breakers - [01x02] - Copycat.mkv          
+✅ DONE   Circuit Breakers - [01x03] - Episode 3.mkv         Circuit Breakers - [01x03] - Picture Perfect.mkv  
+✅ DONE   Circuit Breakers - [01x04] - Episode 4.mkv         Circuit Breakers - [01x04] - Entangled.mkv        
+✅ DONE   Circuit Breakers - [01x05] - Episode 5.mkv         Circuit Breakers - [01x05] - Permanent Detention.mkv
+✅ DONE   Circuit Breakers - [01x06] - Episode 6.mkv         Circuit Breakers - [01x06] - Parental Controls.mkv
+✅ DONE   Circuit Breakers - [01x07] - Episode 7.mkv         Circuit Breakers - [01x07] - No Place Like Home.mkv
+========================================================================================================================
+📊 RESULTS: ✅ 7 successes, ❌ 0 errors
+
+📄 Restore script created: restore_tv_names_20250614_150000.py
+💡 To restore original names, run: python restore_tv_names_20250614_150000.py
+```
+
+## 🛠️ Troubleshooting
+
+### Error: "No series found"
+1. Check series name spelling
+2. Try with original English name
+3. Use a shorter name
+4. Register a TMDB API key for better results
+
+### Error: "API key not configured"
+- Register for free at [TheMovieDB](https://www.themoviedb.org/settings/api)
+- Use `--tmdb-key YOUR_KEY` in the command
+
+### Unrecognized files
+- Verify filename contains `S01E01` or `1x01`
+- Series name must be before episode numbering
+
+## 📄 Supported File Formats
+
+**Supported video extensions:**
+- `.mkv`, `.avi`, `.mp4`, `.m4v`
+- `.mov`, `.wmv`, `.flv`, `.webm`
+- `.ts`, `.m2ts`
+
+**Recognized filename patterns:**
+- `Series.S01E01.*.ext` (standard format)
+- `Series.1x01.*.ext` (alternative format)
+- `Series.Season.1.Episode.01.*.ext` (extended format)
+
+## 🔄 Restore Feature
+
+After each successful execution, a Python restore script is automatically generated:
+```bash
+# To restore original names
+python restore_tv_names_20250614_150000.py
+```
+
+The restore script:
+- ✅ Is completely self-contained
+- ✅ Works on Windows, Linux, and Mac
+- ✅ Has multilingual interface
+- ✅ Asks for confirmation before proceeding
+- ✅ Self-deletes after successful restoration
+
+---
+
+# Documentazione Italiana
+
+**Script universale per rinominare automaticamente episodi di serie TV** interrogando **TMDB**, **TVMaze** e **IMDb** per ottenere informazioni accurate sui titoli degli episodi.
 
 ## 🎯 Caratteristiche Principali
 
 - 📺 **Universale**: Funziona con qualsiasi serie TV, non solo specifiche
-- 🌐 **Multi-fonte**: Integrazione con TMDB, TheTVDB e IMDb
-- 🗣️ **Interfaccia multilingue**: Italiano e Inglese
+- 🌐 **Multi-fonte**: Integrazione con TMDB, TVMaze e IMDb
+- 🗣️ **Interfaccia multilingue**: Supporto Italiano e Inglese
 - 🎨 **5 formati output**: Standard, Plex, Simple, Minimal, Kodi
 - 🔍 **Gestione duplicati**: Scelta intelligente tra versioni multiple
 - 📊 **Episodi mancanti**: Rileva "buchi" nella numerazione
@@ -166,14 +267,14 @@ The script supports multiple naming formats:
 ### Installazione
 ```bash
 # Clona il repository
-git clone https://github.com/andres-zanzani/universal-tv-renamer.git
-cd universal-tv-renamer
+git clone https://github.com/buzzqw/Universal-TV-Series-Renamer.git
+cd Universal-TV-Series-Renamer
 
 # Installa le dipendenze
 pip install requests
 
 # Rendi eseguibile (Linux/macOS)
-chmod +x tvrenamer.py
+chmod +x tvrenamer4.py
 ```
 
 ### API Key TMDB (Opzionale ma Raccomandato)
@@ -189,29 +290,29 @@ Per ottenere titoli episodi di qualità migliore:
 
 ```bash
 # Preview sicura (raccomandato per la prima volta)
-python3 tvrenamer.py /path/to/series
+python3 tvrenamer4.py /path/to/series
 
 # Esecuzione reale
-python3 tvrenamer.py /path/to/series --execute
+python3 tvrenamer4.py /path/to/series --execute
 
 # Con API key TMDB per risultati migliori
-python3 tvrenamer.py /path/to/series --tmdb-key YOUR_API_KEY --execute
+python3 tvrenamer4.py /path/to/series --tmdb-key YOUR_API_KEY --execute
 ```
 
 ### Opzioni Avanzate
 
 ```bash
 # Titoli episodi in inglese
-python3 tvrenamer.py --language en /path/to/series --tmdb-key YOUR_KEY
+python3 tvrenamer4.py --language en /path/to/series --tmdb-key YOUR_KEY
 
 # Interfaccia completamente in inglese
-python3 tvrenamer.py --interface en --language en /path/to/series --tmdb-key YOUR_KEY
+python3 tvrenamer4.py --interface en --language en /path/to/series --tmdb-key YOUR_KEY
 
 # Formato compatibile con Plex
-python3 tvrenamer.py --format plex /path/to/series --tmdb-key YOUR_KEY --execute
+python3 tvrenamer4.py --format plex /path/to/series --tmdb-key YOUR_KEY --execute
 
 # Ricerca ricorsiva nelle sottocartelle
-python3 tvrenamer.py --recursive /path/to/series --tmdb-key YOUR_KEY --execute
+python3 tvrenamer4.py --recursive /path/to/series --tmdb-key YOUR_KEY --execute
 ```
 
 ### Tutti i Parametri
@@ -225,7 +326,6 @@ python3 tvrenamer.py --recursive /path/to/series --tmdb-key YOUR_KEY --execute
 | `--recursive` | - | `false` | Cerca ricorsivamente nelle sottocartelle |
 | `--execute` | - | `false` | Esegue le rinomine (default: solo preview) |
 | `--version` | - | - | Mostra versione e copyright |
-| `--license` | - | - | Mostra informazioni sulla licenza |
 
 ## 🎨 Formati Output
 
@@ -259,96 +359,65 @@ Serie TV S01E01 Titolo Episodio.mkv
 Serie TV S02E05 Altro Episodio.mkv
 ```
 
-## 🔧 Gestione Funzionalità Avanzate
-
-### Duplicati
-Quando lo script trova più file per lo stesso episodio:
-```
-⚠️  DUPLICATI RILEVATI: 1 episodi hanno più file
-
-🔄 S02E03 - 2 file trovati:
-   1. Serie.S02E03.720p.mkv (1.2 GB)
-   2. Serie.S02E03.1080p.mkv (3.8 GB)
-   0. ❌ Salta questo episodio
-   a. ✅ Rinomina tutti i file (aggiungerà [Versione 2], [Versione 3], etc.)
-
-Quale file tenere per S02E03? (1-2, 0, a):
-```
-
-**Opzioni:**
-- **Numero (1-2)**: Mantiene solo il file scelto
-- **0**: Salta completamente questo episodio
-- **a**: Rinomina tutti i file aggiungendo `[Versione 2]`, `[Versione 3]`, etc.
-
-### Episodi Mancanti
-Lo script rileva automaticamente i "buchi" nella numerazione:
-```
-⚠️  EPISODI MANCANTI RILEVATI:
-   📺 Stagione 1: Mancano E03, E07, E09
-   📺 Stagione 2: Mancano E01, E05
-
-💡 Suggerimento: Verifica se hai tutti gli episodi della serie
-```
-
-### Script di Rollback
-Dopo ogni esecuzione riuscita, viene generato automaticamente `rollback_renamer.py`:
-```bash
-# Per ripristinare i nomi originali
-python3 rollback_renamer.py
-```
-
 ## 📋 Output Esempio
 
 ```
-📺 Universal TV Series Renamer v1.0
+📺 Universal TV Series Renamer v1.2 (Clean)
 👨‍💻 Sviluppato da: Andres Zanzani
 📄 Licenza: GPL-3.0
 ==================================================
-📁 Directory: /home/user/Series/INeedMoreHACKS
+📁 Directory: /home/user/Series/Circuit.Breakers
 🎨 Formato: standard
-🌍 Lingua episodi: en
-🗣️ Lingua interfaccia: it
+🌍 Lingua: it
 🔄 Ricorsivo: No
 ⚙️  Modalità: PREVIEW
 ==================================================
-✅ TMDB API key configurata
-✅ Autenticazione TheTVDB v4 riuscita
+✅ TMDB configurato
+✅ TVMaze configurato
+✅ IMDb configurato
+🔗 Provider attivi: TMDB, TVMaze, IMDb
 
-🔍 Ricerca in corso per: 'INeedMoreHACKS'
+📁 Trovati 7 file video
+
+================================================================================
+📺 SERIE: Circuit Breakers (7 file)
+================================================================================
+🔍 Ricerca in corso per: 'Circuit Breakers'
 🔄 Ricerca su TMDB...
+✅ 1 risultati da TMDB
+🔄 Ricerca su TVMaze...
+✅ 1 risultati da TVMaze
+🔄 Ricerca su IMDb...
+✅ 3 risultati da IMDb
 
-🔍 Risultati di ricerca per: 'INeedMoreHACKS'
+🔍 Risultati di ricerca per: 'Circuit Breakers':
 ================================================================================
- 1. TMDB | INeedMoreHACKS | 2024 | ⭐ 8.4/10
-    └─ The story of haves and have-nots in a world in which there's almost...
+ 1. TMDB | Circuit Breakers | 2022 | ⭐ 6.4/10
+    └─ In questa serie antologica di fantascienza, alcuni studenti del futuro...
+ 2. TVMaze | Circuit Breakers | 2022 | ⭐ 3.3/10
+    └─ Circuit Breakers is a half-hour thought-provoking futuristic anthology...
+ 3. IMDb (tt21942776) | Circuit Breakers | ⭐ 5.5/10
+    └─ Follow the futuristic anthology as it tackles children's issues...
 
-Seleziona (1-1, 0, r, q): 1
+Seleziona (1-3, 0, q): 1
 
-================================================================================
-📋 PREVIEW - 10 file
-================================================================================
-NOME ORIGINALE                                    | NUOVO NOME                                          
---------------------------------------------------+----------------------------------------------------
-INeedMoreHACKS.S01E01.The.End.2160p.AMZN.WEB-DL.mkv     | INeedMoreHACKS - [01x01] - The End.mkv
-INeedMoreHACKS.S01E02.The.Target.2160p.AMZN.WEB-DL.mkv  | INeedMoreHACKS - [01x02] - The Target.mkv
---------------------------------------------------+----------------------------------------------------
-📊 RISULTATI: ✅ 10 successi, ❌ 0 errori
+📋 ESECUZIONE - 7 file
+========================================================================================================================
+STATO    FILE ORIGINALE                                     NUOVO FILE                                        
+------------------------------------------------------------------------------------------------------------------------
+✅ DONE   Circuit Breakers - [01x01] - Episode 1.mkv         Circuit Breakers - [01x01] - Soggetto numero 13.mkv
+✅ DONE   Circuit Breakers - [01x02] - Episode 2.mkv         Circuit Breakers - [01x02] - Il duplicato.mkv      
+✅ DONE   Circuit Breakers - [01x03] - Episode 3.mkv         Circuit Breakers - [01x03] - Il ricordo perfetto.mkv
+✅ DONE   Circuit Breakers - [01x04] - Episode 4.mkv         Circuit Breakers - [01x04] - Lo scambio.mkv        
+✅ DONE   Circuit Breakers - [01x05] - Episode 5.mkv         Circuit Breakers - [01x05] - Punizione infinita.mkv
+✅ DONE   Circuit Breakers - [01x06] - Episode 6.mkv         Circuit Breakers - [01x06] - Controllo genitori.mkv
+✅ DONE   Circuit Breakers - [01x07] - Episode 7.mkv         Circuit Breakers - [01x07] - Nessun luogo è come casa.mkv
+========================================================================================================================
+📊 RISULTATI: ✅ 7 successi, ❌ 0 errori
 
-💡 Per eseguire realmente le rinomine, aggiungi --execute
+📄 Script di ripristino creato: restore_tv_names_20250614_150000.py
+💡 Per ripristinare i nomi originali, esegui: python restore_tv_names_20250614_150000.py
 ```
-
-## 🎯 Formati File Supportati
-
-**Estensioni video supportate:**
-- `.mkv`, `.avi`, `.mp4`, `.m4v`
-- `.mov`, `.wmv`, `.flv`, `.webm`
-- `.ts`, `.m2ts`
-
-**Pattern filename riconosciuti:**
-- `Serie.S01E01.*.ext` (formato standard)
-- `Serie.1x01.*.ext` (formato alternativo)
-- `Serie.Season.1.Episode.01.*.ext` (formato esteso)
-- `[Gruppo] Serie - 01 - Titolo [CRC].ext` (formato anime)
 
 ## 🛠️ Risoluzione Problemi
 
@@ -366,70 +435,69 @@ INeedMoreHACKS.S01E02.The.Target.2160p.AMZN.WEB-DL.mkv  | INeedMoreHACKS - [01x0
 - Verifica che il filename contenga `S01E01` o `1x01`
 - Il nome della serie deve essere prima della numerazione episodio
 
-## 🤝 Contributi
+## 📄 Formati File Supportati
 
-I contributi sono benvenuti! Per contribuire:
+**Estensioni video supportate:**
+- `.mkv`, `.avi`, `.mp4`, `.m4v`
+- `.mov`, `.wmv`, `.flv`, `.webm`
+- `.ts`, `.m2ts`
 
-1. Fork del repository
-2. Crea un branch per la feature (`git checkout -b feature/AmazingFeature`)
-3. Commit delle modifiche (`git commit -m 'Add some AmazingFeature'`)
-4. Push del branch (`git push origin feature/AmazingFeature`)
-5. Apri una Pull Request
+**Pattern filename riconosciuti:**
+- `Serie.S01E01.*.ext` (formato standard)
+- `Serie.1x01.*.ext` (formato alternativo)
+- `Serie.Season.1.Episode.01.*.ext` (formato esteso)
 
-### Aree di Miglioramento
-- [ ] Supporto per più lingue nell'interfaccia
-- [ ] Integrazione con altri database (AniDB, etc.)
-- [ ] GUI grafica opzionale
-- [ ] Supporto per film
-- [ ] Plugin per media center
+## 🔄 Funzionalità di Ripristino
 
-## 📝 Changelog
-
-### v1.0 (2024)
-- ✅ Prima release pubblica
-- ✅ Supporto TMDB, TheTVDB, IMDb
-- ✅ Interfaccia multilingue (IT/EN)
-- ✅ 5 formati output
-- ✅ Gestione duplicati e episodi mancanti
-- ✅ Script di rollback automatico
-- ✅ Tabella adattiva al terminale
-
-## 📄 Licenza
-
-Questo progetto è rilasciato sotto licenza **GNU General Public License v3.0**.
-
-```
-Copyright (C) 2024 Andres Zanzani
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Dopo ogni esecuzione riuscita, viene generato automaticamente uno script Python di ripristino:
+```bash
+# Per ripristinare i nomi originali
+python restore_tv_names_20250614_150000.py
 ```
 
-Per il testo completo della licenza: [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)
+Lo script di ripristino:
+- ✅ È completamente autonomo
+- ✅ Funziona su Windows, Linux e Mac
+- ✅ Ha interfaccia multilingue
+- ✅ Chiede conferma prima di procedere
+- ✅ Si auto-elimina dopo il ripristino riuscito
 
-## 🙏 Ringraziamenti
+---
 
-- [TheTVDB](https://thetvdb.com/) per i dati delle serie TV
-- [TheMovieDB](https://www.themoviedb.org/) per i dati aggiuntivi e le traduzioni
-- [IMDb](https://www.imdb.com/) come fonte di fallback
-- La comunità open source per le librerie utilizzate
+## 🤝 Contributing
 
-## 📞 Supporto
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Per bug, richieste di funzionalità o domande:
+## 📝 License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [TMDB](https://www.themoviedb.org/) for TV series data
+- [TVMaze](https://www.tvmaze.com/) for additional episode information
+- [IMDb](https://www.imdb.com/) as fallback source
+- The open source community for the libraries used
+
+## 📞 Support
+
+For bugs, feature requests, or questions:
 - 🐛 **Issues**: [GitHub Issues](https://github.com/buzzqw/Universal-TV-Series-Renamer/issues)
 
 ---
 
-**⭐ Se ti piace questo progetto, lascia una stella su GitHub!**
+## 💝 Support the Project Again
+
+**If this tool saved you time, please consider a small donation:**
+
+[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)
+
+**[💰 Donate via PayPal](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)**
+
+Every contribution helps keep this project alive and improving! 🚀
+
+---
+
+**⭐ If you like this project, please give it a star on GitHub!**
 
 Made with ❤️ by [Andres Zanzani](https://github.com/buzzqw)
-
-Dona qualche spicciolo con PayPal! https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT
