@@ -638,7 +638,7 @@ class FileUtils:
     
     @staticmethod
     def extract_series_info(filename: str) -> str:
-        """Estrae nome serie dal filename - FIXED"""
+        """Estrae nome serie dal filename"""
         name = Path(filename).stem
         
         # Pattern più aggressivi per rimuovere tutto dopo stagione/episodio
@@ -759,7 +759,6 @@ class RestoreManager:
             cancelled_msg = "Operation cancelled."
             processing_msg = "Processing restores..."
             not_found_msg = "File not found"
-            results_msg = "RESULTS: {} successes, {} errors"
         else:
             header_comment = "TV Renamer - Script di Ripristino"
             description = "Questo script ripristina i nomi file originali"
@@ -768,11 +767,10 @@ class RestoreManager:
             cancelled_msg = "Operazione annullata."
             processing_msg = "Elaborazione ripristini..."
             not_found_msg = "File non trovato"
-            results_msg = "RISULTATI: {} successi, {} errori"
         
         # Prepara la lista delle rinomine per il codice Python
         renames_code = "    # (current_name, original_name)\n    renames = [\n"
-        for new_name, old_name in self.renames:
+        for old_name, new_name in self.renames:
             # Escapa le stringhe per Python
             old_escaped = repr(old_name)
             new_escaped = repr(new_name)
@@ -823,11 +821,8 @@ def main():
     print(f"{{'STATO':<10}} {{'FILE CORRENTE':<35}} {{'NOME ORIGINALE':<35}}")
     print("-" * 80)
     
-    success = 0
-    errors = 0
-    
-    success = 0
-    errors = 0
+    successi = 0
+    errori = 0
     
     for current_name, original_name in renames:
         current_path = script_dir / current_name
@@ -840,29 +835,28 @@ def main():
         try:
             if not current_path.exists():
                 print(f"{{'❌ SKIP':<10}} {{current_display:<35}} {{original_display:<35}} ({not_found_msg})")
-                errors += 1
+                errori += 1
                 continue
             
             if original_path.exists():
                 print(f"{{'❌ EXISTS':<10}} {{current_display:<35}} {{original_display:<35}}")
-                errors += 1
+                errori += 1
                 continue
             
             # Rinomina
             current_path.rename(original_path)
             print(f"{{'✅ OK':<10}} {{current_display:<35}} {{original_display:<35}}")
-            success += 1
+            successi += 1
             
         except Exception as e:
             error_detail = str(e)[:20] + "..." if len(str(e)) > 20 else str(e)
             print(f"{{'❌ ERROR':<10}} {{current_display:<35}} {{error_detail:<35}}")
-            errors += 1
-    
+            errori += 1
     
     print("=" * 80)
-    print(f"📊 """ + results_msg + """.format(success, errors)")
+    print(f"📊 RISULTATI: {{successi}} successi, {{errori}} errori")
     
-    if success > 0:
+    if successi > 0:
         print("\\n✅ Ripristino completato!")
         
         # Rimuovi questo script dopo il successo
@@ -949,6 +943,43 @@ class TVSeriesRenamer:
                     sys.exit(0)
                 print("❌ Selezione non valida!")
     
+    def check_missing_episodes(self, episodes_found: List[Tuple[int, int]]):
+        """Controlla episodi mancanti"""
+        lang = self.text_manager.language
+        
+        # Raggruppa per stagione
+        seasons = {}
+        for season, episode in episodes_found:
+            if season not in seasons:
+                seasons[season] = []
+            seasons[season].append(episode)
+        
+        missing_found = False
+        for season, episodes in seasons.items():
+            episodes.sort()
+            
+            # Trova episodi mancanti
+            if len(episodes) > 1:
+                min_ep = min(episodes)
+                max_ep = max(episodes)
+                expected = set(range(min_ep, max_ep + 1))
+                found = set(episodes)
+                missing = sorted(expected - found)
+                
+                if missing:
+                    if not missing_found:
+                        print(f"\n⚠️  {'EPISODI MANCANTI RILEVATI:' if lang == 'it' else 'MISSING EPISODES DETECTED:'}")
+                        missing_found = True
+                    
+                    missing_str = ", ".join([f"E{ep:02d}" for ep in missing])
+                    print(f"   📺 {'Stagione' if lang == 'it' else 'Season'} {season}: {'Mancano' if lang == 'it' else 'Missing'} {missing_str}")
+        
+        if missing_found:
+            print("=" * 80)
+            suggestion = "💡 Suggerimento: Verifica se hai tutti gli episodi della serie" if lang == 'it' else "💡 Suggestion: Check if you have all episodes of the series"
+            print(f"{suggestion}")
+            print("=" * 80)
+    
     def generate_filename(self, series_name: str, season: int, episode: int, 
                          episode_title: str, original_ext: str) -> str:
         """Genera nuovo nome file"""
@@ -1024,9 +1055,12 @@ class TVSeriesRenamer:
             print(f"{self.text_manager.get('skipping_series')} {series_name}")
             return
         
-        # Processa file
+        # Processa file e gestisci duplicati
         renames = []
+        episodes_found = []
+        episode_files = {}  # (season, episode) -> [files]
         
+        # Raggruppa file per episodio
         for video_file in files:
             season, episode = FileUtils.extract_episode_info(video_file.name)
             
@@ -1034,16 +1068,58 @@ class TVSeriesRenamer:
                 print(self.text_manager.get('skip_unrecognized', video_file.name))
                 continue
             
+            episodes_found.append((season, episode))
+            
+            ep_key = (season, episode)
+            if ep_key not in episode_files:
+                episode_files[ep_key] = []
+            episode_files[ep_key].append(video_file)
+        
+        # Controlla episodi mancanti
+        if episodes_found:
+            self.check_missing_episodes(episodes_found)
+        
+        # Processa ogni gruppo di episodi
+        for (season, episode), file_list in episode_files.items():
             # Ottieni info episodio
             episode_info = self.searcher.get_episode_info(selected_series, season, episode)
             episode_title = episode_info.title if episode_info else f"Episode {episode}"
             
-            # Genera nuovo nome
-            new_name = self.generate_filename(
-                selected_series.name, season, episode, episode_title, video_file.suffix
-            )
-            
-            renames.append((video_file, new_name))
+            if len(file_list) == 1:
+                # File singolo
+                video_file = file_list[0]
+                new_name = self.generate_filename(
+                    selected_series.name, season, episode, episode_title, video_file.suffix
+                )
+                renames.append((video_file, new_name))
+            else:
+                # File multipli - gestisci duplicati
+                print(f"\n🔄 {'DUPLICATI RILEVATI' if self.text_manager.language == 'it' else 'DUPLICATES DETECTED'}: S{season:02d}E{episode:02d} - {len(file_list)} file")
+                
+                # Ordina per dimensione (più grande presumibilmente migliore)
+                file_list.sort(key=lambda f: f.stat().st_size, reverse=True)
+                
+                # Mostra info sui file
+                for i, video_file in enumerate(file_list):
+                    size_mb = video_file.stat().st_size / (1024 * 1024)
+                    print(f"   {i+1}. {video_file.name} ({size_mb:.1f} MB)")
+                
+                for i, video_file in enumerate(file_list):
+                    # Tutti i file duplicati hanno [Versione X]
+                    version_text = f"[Versione {i+1}]" if self.text_manager.language == 'it' else f"[Version {i+1}]"
+                    series_clean = FileUtils.clean_filename(selected_series.name)
+                    episode_clean = FileUtils.clean_filename(episode_title)
+                    
+                    formats = {
+                        "standard": f"{series_clean} - [{season:02d}x{episode:02d}] - {episode_clean} {version_text}{video_file.suffix}",
+                        "plex": f"{series_clean} - S{season:02d}E{episode:02d} - {episode_clean} {version_text}{video_file.suffix}",
+                        "simple": f"{series_clean} {season}x{episode:02d} {episode_clean} {version_text}{video_file.suffix}",
+                        "minimal": f"{series_clean} S{season:02d}E{episode:02d} {version_text}{video_file.suffix}",
+                        "kodi": f"{series_clean} S{season:02d}E{episode:02d} {episode_clean} {version_text}{video_file.suffix}"
+                    }
+                    new_name = formats.get(self.config.format_style, formats["standard"])
+                    
+                    renames.append((video_file, new_name))
         
         # Esegui rinomine
         if renames:
@@ -1098,10 +1174,13 @@ class TVSeriesRenamer:
         
         # Crea script di ripristino se ci sono stati successi
         if not self.config.dry_run and restore_manager.renames:
-            script_name = restore_manager.create_restore_script()
-            if script_name:
-                print(f"\n{self.text_manager.get('restore_script_created', script_name)}")
-                print(f"{self.text_manager.get('restore_instructions', script_name)}")
+            try:
+                script_name = restore_manager.create_restore_script()
+                if script_name:
+                    print(f"\n{self.text_manager.get('restore_script_created', script_name)}")
+                    print(f"{self.text_manager.get('restore_instructions', script_name)}")
+            except Exception as e:
+                print(f"\n❌ Errore nella creazione dello script di ripristino: {e}")
 
 # ============================================================================
 # MAIN
