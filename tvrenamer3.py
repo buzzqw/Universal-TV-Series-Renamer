@@ -12,9 +12,11 @@ import re
 import sys
 import time
 import html
+import json
+import logging
 import argparse
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple, Set
+from typing import Any, Optional, Dict, List, Tuple, Set
 from dataclasses import dataclass
 from collections import Counter
 from abc import ABC, abstractmethod
@@ -95,6 +97,7 @@ class RenameOperation:
 class Constants:
     """Costanti dell'applicazione"""
     VIDEO_EXTENSIONS = {'.mkv', '.avi', '.mp4', '.m4v', '.mov', '.wmv', '.flv', '.webm', '.ts', '.m2ts'}
+    MAX_FILENAME_LENGTH = 240
     
     GENERIC_NAMES = {
         'downloads', 'download', 'episodi', 'episodes', 'tv', 'series', 'tv series', 
@@ -109,6 +112,11 @@ class Constants:
         'the walking dead': 'The Walking Dead',
         'stranger things': 'Stranger Things',
         'quantum leap': 'Quantum Leap'
+    }
+    WINDOWS_RESERVED_NAMES = {
+        'CON', 'PRN', 'AUX', 'NUL',
+        *(f'COM{i}' for i in range(1, 10)),
+        *(f'LPT{i}' for i in range(1, 10)),
     }
 
 class FileUtils:
@@ -131,25 +139,40 @@ class FileUtils:
     @staticmethod
     def clean_filename(name: str) -> str:
         """Pulisce un nome file da caratteri non validi"""
-        name = html.unescape(name)
+        name = html.unescape(str(name or ''))
         invalid_chars = '<>:"/\\|?*'
         for char in invalid_chars:
             name = name.replace(char, '')
         name = name.replace('&', 'and')
-        return re.sub(r'\s+', ' ', name).strip()
+        name = re.sub(r'[\x00-\x1f\x7f]', '', name)
+        name = re.sub(r'\s+', ' ', name).strip(' .')
+
+        # Windows rejects these names even when no invalid character is used.
+        stem = name.split('.', 1)[0].upper()
+        if stem in Constants.WINDOWS_RESERVED_NAMES:
+            name = f'_{name}'
+        return name or 'Unknown'
 
 class PatternUtils:
     """Utilità per l'estrazione di pattern dai nomi file"""
     
     SEASON_EPISODE_PATTERNS = [
-        r'[Ss](\d+)[Ee](\d+)',
-        r'(\d+)x(\d+)',
-        r'[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)'
+        r'(?<![A-Za-z0-9])[Ss](\d{1,3})[ ._-]*[Ee](\d{1,3})(?!\d)',
+        r'(?<![A-Za-z0-9])(\d{1,3})[ ._-]*x[ ._-]*(\d{1,3})(?!\d)',
+        r'(?<![A-Za-z0-9])[Ss]eason[ ._-]*(\d{1,3}).*?[Ee]pisode[ ._-]*(\d{1,3})(?!\d)'
     ]
     
     @classmethod
     def extract_season_episode(cls, filename: str) -> Tuple[Optional[int], Optional[int]]:
         """Estrae numero stagione e episodio dal nome file"""
+        # Un modello con episodi multipli non può essere rappresentato da una
+        # singola RenameOperation: meglio saltarlo che assegnargli un titolo errato.
+        if re.search(
+            r'(?<![A-Za-z0-9])[Ss]\d{1,3}[ ._-]*[Ee]\d{1,3}(?:[ ._-]*(?:[Ee]|-)[ ._-]*\d{1,3})+',
+            filename,
+            re.IGNORECASE
+        ):
+            return None, None
         for pattern in cls.SEASON_EPISODE_PATTERNS:
             match = re.search(pattern, filename, re.IGNORECASE)
             if match:
@@ -159,7 +182,11 @@ class PatternUtils:
     @classmethod
     def find_season_episode_position(cls, text: str) -> int:
         """Trova la posizione del pattern stagione/episodio nel testo"""
-        patterns = [r'[Ss]\d+[Ee]\d+', r'\d+x\d+', r'[Ss]eason\s*\d+']
+        patterns = [
+            r'(?<![A-Za-z0-9])[Ss]\d{1,3}[ ._-]*[Ee]\d{1,3}',
+            r'(?<![A-Za-z0-9])\d{1,3}[ ._-]*x[ ._-]*\d{1,3}',
+            r'(?<![A-Za-z0-9])[Ss]eason[ ._-]*\d{1,3}'
+        ]
         earliest = len(text)
         
         for pattern in patterns:
@@ -204,7 +231,7 @@ class SeriesExtractor:
         """Estrae il nome della serie dai nomi dei file"""
         series_candidates = []
         
-        for file_path in files[:10]:  # Analizza solo i primi 10 file
+        for file_path in files:
             stem = file_path.stem
             season_pos = PatternUtils.find_season_episode_position(stem)
             
@@ -252,7 +279,8 @@ class SeriesExtractor:
         """Estrae il nome della serie analizzando pattern comuni"""
         words_counter = Counter()
         
-        for file_path in files[:10]:
+        analyzed_files = files
+        for file_path in analyzed_files:
             stem = file_path.stem
             
             # Rimuovi pattern comuni
@@ -263,11 +291,11 @@ class SeriesExtractor:
             cleaned = re.sub(r'\[.*?\]', '', cleaned)
             cleaned = re.sub(r'\(.*?\)', '', cleaned)
             
-            words = re.findall(r'[A-Za-z]{3,}', cleaned)
+            words = re.findall(r'[^\W\d_]{3,}', cleaned, flags=re.UNICODE)
             for word in words:
                 words_counter[word.lower()] += 1
         
-        min_frequency = max(1, len(files) // 2)
+        min_frequency = max(1, len(analyzed_files) // 2)
         common_words = [word for word, count in words_counter.items() 
                        if count >= min_frequency]
         
@@ -311,6 +339,9 @@ class SeriesExtractor:
         
         if cleaned in Constants.GENERIC_NAMES:
             return False
+
+        if re.match(r'^(season|stagione|episode|episodio)\s*\d+$', cleaned):
+            return False
         
         if re.match(r'^[\d\s\-\.]+', cleaned):
             return False
@@ -337,14 +368,18 @@ class FilenameBuilder:
               episode_title: str, extension: str, format_style: FormatStyle) -> str:
         """Costruisce il nome file nel formato specificato"""
         template = cls.FORMAT_TEMPLATES.get(format_style, cls.FORMAT_TEMPLATES[FormatStyle.STANDARD])
-        
-        return template.format(
+
+        filename = template.format(
             series=FileUtils.clean_filename(series_name),
             season=season,
             episode=episode,
-            title=FileUtils.clean_filename(episode_title),
+            title=FileUtils.clean_filename(episode_title or f'Episode {episode}'),
             ext=extension
         )
+        if len(filename) > Constants.MAX_FILENAME_LENGTH:
+            suffix = extension
+            filename = filename[:Constants.MAX_FILENAME_LENGTH - len(suffix)] + suffix
+        return filename
 
 # ============================================================================
 # PROVIDER API (PATTERN STRATEGY)
@@ -419,6 +454,7 @@ class APIProvider(ABC):
     def __init__(self, http_client: HTTPClient):
         self.http_client = http_client
         self.cache = SimpleCache()
+        self.last_error: Optional[str] = None
     
     @abstractmethod
     def search_series(self, query: str) -> List[SeriesInfo]:
@@ -442,22 +478,26 @@ class TMDBProvider(APIProvider):
     def search_series(self, query: str) -> List[SeriesInfo]:
         cache_key = f"tmdb_{query}_{self.language.value}"
         cached = self.cache.get(cache_key)
-        if cached:
+        if cached is not None:
             return cached
-        
+        self.last_error = None
         try:
             url = f"{self.base_url}/search/tv"
             params = {
                 'api_key': self.api_key,
                 'query': query,
-                'language': f'{self.language.value}-{self.language.value.upper()}'
+                'language': self._tmdb_language()
             }
             
             response = self.http_client.get(url, params=params)
             data = response.json()
+            if not isinstance(data, dict):
+                raise ValueError('TMDB returned an invalid search response')
             
             results = []
             for item in data.get('results', [])[:5]:
+                if not isinstance(item, dict):
+                    continue
                 series = SeriesInfo(
                     id=str(item.get('id')),
                     name=item.get('name', 'Nome non disponibile'),
@@ -470,34 +510,52 @@ class TMDBProvider(APIProvider):
             
             self.cache.set(cache_key, results)
             return results
-        except Exception:
+        except (requests.RequestException, ValueError, TypeError, KeyError, AttributeError) as exc:
+            self.last_error = str(exc)
+            logging.getLogger(__name__).warning("TMDB search failed for %r: %s", query, exc)
             return []
+
+    def _tmdb_language(self) -> str:
+        """Restituisce un codice lingua valido per TMDB."""
+        return {
+            Language.ITALIAN: 'it-IT',
+            Language.ENGLISH: 'en-US',
+            Language.SPANISH: 'es-ES',
+            Language.FRENCH: 'fr-FR',
+            Language.GERMAN: 'de-DE',
+        }.get(self.language, 'en-US')
     
     def get_episode_info(self, series_id: str, season: int, episode: int) -> Optional[EpisodeInfo]:
         cache_key = f"tmdb_ep_{series_id}_{season}_{episode}_{self.language.value}"
         cached = self.cache.get(cache_key)
-        if cached:
+        if cached is not None:
             return cached
         
         try:
             url = f"{self.base_url}/tv/{series_id}/season/{season}/episode/{episode}"
             params = {
                 'api_key': self.api_key,
-                'language': f'{self.language.value}-{self.language.value.upper()}'
+                'language': self._tmdb_language()
             }
             
             response = self.http_client.get(url, params=params)
             data = response.json()
             
+            if not isinstance(data, dict):
+                raise ValueError('TMDB returned an invalid episode response')
             episode_info = EpisodeInfo(
-                title=data.get('name', f'Episode {episode}'),
+                title=data.get('name') or f'Episode {episode}',
                 season=season,
                 episode=episode
             )
             
             self.cache.set(cache_key, episode_info)
             return episode_info
-        except Exception:
+        except (requests.RequestException, ValueError, TypeError, KeyError, AttributeError) as exc:
+            logging.getLogger(__name__).warning(
+                "TMDB episode lookup failed for %s S%02dE%02d: %s",
+                series_id, season, episode, exc
+            )
             return None
 
 class TVMazeProvider(APIProvider):
@@ -510,17 +568,23 @@ class TVMazeProvider(APIProvider):
     def search_series(self, query: str) -> List[SeriesInfo]:
         cache_key = f"tvmaze_{query}"
         cached = self.cache.get(cache_key)
-        if cached:
+        if cached is not None:
             return cached
-        
+        self.last_error = None
         try:
             url = f"{self.base_url}/search/shows"
             response = self.http_client.get(url, params={'q': query})
             data = response.json()
+            if not isinstance(data, list):
+                raise ValueError('TVMaze returned an invalid search response')
             
             results = []
             for item in data[:5]:
+                if not isinstance(item, dict):
+                    continue
                 show = item.get('show', {})
+                if not isinstance(show, dict):
+                    continue
                 summary = re.sub(r'<[^>]+>', '', show.get('summary', '') or '').strip()
                 
                 series = SeriesInfo(
@@ -535,13 +599,15 @@ class TVMazeProvider(APIProvider):
             
             self.cache.set(cache_key, results)
             return results
-        except Exception:
+        except (requests.RequestException, ValueError, TypeError, KeyError, AttributeError) as exc:
+            self.last_error = str(exc)
+            logging.getLogger(__name__).warning("TVMaze search failed for %r: %s", query, exc)
             return []
     
     def get_episode_info(self, series_id: str, season: int, episode: int) -> Optional[EpisodeInfo]:
         cache_key = f"tvmaze_ep_{series_id}_{season}_{episode}"
         cached = self.cache.get(cache_key)
-        if cached:
+        if cached is not None:
             return cached
         
         try:
@@ -549,15 +615,21 @@ class TVMazeProvider(APIProvider):
             response = self.http_client.get(url, params={'season': season, 'number': episode})
             data = response.json()
             
+            if not isinstance(data, dict):
+                raise ValueError('TVMaze returned an invalid episode response')
             episode_info = EpisodeInfo(
-                title=data.get('name', f'Episode {episode}'),
+                title=data.get('name') or f'Episode {episode}',
                 season=season,
                 episode=episode
             )
             
             self.cache.set(cache_key, episode_info)
             return episode_info
-        except Exception:
+        except (requests.RequestException, ValueError, TypeError, KeyError, AttributeError) as exc:
+            logging.getLogger(__name__).warning(
+                "TVMaze episode lookup failed for %s S%02dE%02d: %s",
+                series_id, season, episode, exc
+            )
             return None
 
 # ============================================================================
@@ -589,27 +661,63 @@ class APIManager:
     
     def search_series(self, query: str) -> List[SeriesInfo]:
         """Cerca serie utilizzando tutti i provider disponibili"""
+        if not self.providers:
+            raise APIException("Nessun provider API disponibile")
         all_results = []
+        failed_providers = 0
         
         for provider in self.providers:
             try:
                 results = provider.search_series(query)
                 all_results.extend(results)
             except Exception:
+                failed_providers += 1
                 continue
+            if provider.last_error:
+                failed_providers += 1
+
+        if failed_providers == len(self.providers) and not all_results:
+            raise APIException("Tutti i provider API hanno restituito un errore")
         
         return self._deduplicate_results(all_results)
     
     def get_episode_info(self, series_info: SeriesInfo, season: int, episode: int) -> Optional[EpisodeInfo]:
-        """Ottiene informazioni sull'episodio dal provider appropriato"""
-        for provider in self.providers:
+        """Ottiene il titolo, usando gli altri provider come fallback."""
+        ordered = sorted(
+            self.providers,
+            key=lambda provider: 0 if provider.__class__.__name__.replace('Provider', '') == series_info.source else 1
+        )
+        for provider in ordered:
             provider_name = provider.__class__.__name__.replace('Provider', '')
-            if provider_name == series_info.source:
-                try:
-                    return provider.get_episode_info(series_info.id, season, episode)
-                except Exception:
-                    continue
+            provider_id = series_info.id if provider_name == series_info.source else self._find_series_id(
+                provider, series_info
+            )
+            if not provider_id:
+                continue
+            try:
+                episode_info = provider.get_episode_info(provider_id, season, episode)
+                if episode_info:
+                    return episode_info
+            except Exception as exc:
+                logging.getLogger(__name__).warning(
+                    "%s episode lookup failed for %s S%02dE%02d: %s",
+                    provider_name, series_info.name, season, episode, exc
+                )
         return None
+
+    @staticmethod
+    def _find_series_id(provider: APIProvider, series_info: SeriesInfo) -> Optional[str]:
+        """Trova l'ID equivalente quando si passa a un altro provider."""
+        results = provider.search_series(series_info.name)
+        if not results:
+            return None
+        normalized_name = series_info.name.casefold().strip()
+        for result in results:
+            if result.name.casefold().strip() == normalized_name and (
+                not series_info.year or not result.year or result.year == series_info.year
+            ):
+                return result.id
+        return results[0].id
     
     def _deduplicate_results(self, results: List[SeriesInfo]) -> List[SeriesInfo]:
         """Rimuove duplicati dai risultati"""
@@ -731,7 +839,7 @@ class UserInterface:
         
         return self._get_user_choice(len(results))
     
-    def _get_user_choice(self, max_choice: int) -> Optional[SeriesInfo]:
+    def _get_user_choice(self, max_choice: int) -> Optional[int]:
         """Gestisce l'input dell'utente per la selezione"""
         while True:
             try:
@@ -747,9 +855,10 @@ class UserInterface:
                         return choice_num  # Restituisce l'indice per la selezione
                     else:
                         print("❌ Selezione non valida!")
-            except (ValueError, KeyboardInterrupt):
-                if choice == 'q':
-                    sys.exit(0)
+            except KeyboardInterrupt:
+                print()
+                sys.exit(0)
+            except ValueError:
                 print("❌ Selezione non valida!")
 
 # ============================================================================
@@ -778,6 +887,33 @@ class TVSeriesRenamer:
             return
         
         print(f"\n{self.text_manager.get('files_found', len(video_files))}")
+
+        # Evita di applicare una serie scelta a file appartenenti a serie diverse.
+        if self.config.recursive:
+            filename_candidates = [
+                SeriesExtractor._clean_and_correct(SeriesExtractor._extract_from_filenames([file_path]))
+                for file_path in video_files
+            ]
+            known_candidates = set(filename_candidates) - {'Unknown Series'}
+            if len(known_candidates) > 1 or ('Unknown Series' in filename_candidates and known_candidates):
+                print("⚠️  Rilevate serie multiple o nomi ambigui nella ricerca ricorsiva; operazione annullata.")
+                print("💡 Esegui lo script separatamente per ogni serie o organizza meglio le sottocartelle.")
+                return
+            if not known_candidates:
+                parent_candidates = set()
+                for file_path in video_files:
+                    parent = file_path.parent
+                    while parent != directory and parent != parent.parent:
+                        if SeriesExtractor._is_meaningful_directory(parent.name):
+                            parent_candidates.add(
+                                SeriesExtractor._clean_and_correct(parent.name)
+                            )
+                            break
+                        parent = parent.parent
+                if len(parent_candidates) > 1:
+                    print("⚠️  Rilevate più serie nelle sottocartelle; operazione ricorsiva annullata.")
+                    print("💡 Esegui lo script separatamente per ogni serie.")
+                    return
         
         # Ottieni nome directory corretto
         directory_name = Path.cwd().name if str(directory) in ['.', './'] else directory.name
@@ -842,10 +978,22 @@ class TVSeriesRenamer:
                 episode_files[ep_key] = []
             episode_files[ep_key].append(video_file)
         
+        # Segnala i buchi nella numerazione una sola volta per stagione.
+        for season in sorted({season for season, _ in episode_files}):
+            season_episodes = sorted(ep for (s, ep) in episode_files if s == season and ep > 0)
+            if season_episodes:
+                expected = set(range(season_episodes[0], season_episodes[-1] + 1))
+                missing = sorted(expected - set(season_episodes))
+                if missing:
+                    print(f"⚠️  Episodi mancanti nella stagione {season}: {', '.join(map(str, missing))}")
+
         # Crea operazioni per ogni episodio
         for (season, episode), file_list in episode_files.items():
             episode_info = self.api_manager.get_episode_info(series, season, episode)
             episode_title = episode_info.title if episode_info else f"Episode {episode}"
+
+            # In caso di duplicati, mantieni per prima la copia più grande.
+            file_list.sort(key=self._file_size_sort_key)
             
             for i, video_file in enumerate(file_list):
                 new_name = FilenameBuilder.build(
@@ -871,10 +1019,52 @@ class TVSeriesRenamer:
                 ))
         
         return operations
+
+    @staticmethod
+    def _file_size_sort_key(file_path: Path) -> Tuple[int, str]:
+        try:
+            return (-file_path.stat().st_size, str(file_path))
+        except OSError:
+            return (0, str(file_path))
+
+    @staticmethod
+    def _preflight_renames(operations: List[RenameOperation]) -> List[str]:
+        """Controlla tutte le destinazioni prima di modificare il filesystem."""
+        errors = []
+        targets: Dict[str, int] = {}
+        old_paths = {str(operation.old_path.absolute()).casefold() for operation in operations}
+
+        for index, operation in enumerate(operations, 1):
+            old_path = operation.old_path
+            new_path = old_path.parent / operation.new_name
+            old_key = str(old_path.absolute()).casefold()
+            new_key = str(new_path.absolute()).casefold()
+
+            if not old_path.is_file():
+                errors.append(f"#{index}: file originale non trovato: {old_path}")
+            if len(new_path.name) > 255:
+                errors.append(f"#{index}: nome destinazione troppo lungo: {new_path.name}")
+            if new_key in targets:
+                errors.append(f"#{index}: destinazione duplicata: {new_path}")
+            else:
+                targets[new_key] = index
+            if new_key in old_paths and new_key != old_key:
+                errors.append(f"#{index}: conflitto/ciclo con un'altra rinomina: {new_path}")
+            if new_path.exists() and new_key != old_key:
+                errors.append(f"#{index}: destinazione già esistente: {new_path}")
+
+        return errors
     
     def _execute_renames(self, operations: List[RenameOperation], directory: Path):
         """Esegue le operazioni di rinomina"""
         restore_manager = RestoreScriptManager(directory, self.text_manager)
+
+        preflight_errors = self._preflight_renames(operations)
+        if preflight_errors:
+            print("\n❌ Preflight fallito: nessun file verrà rinominato.")
+            for error in preflight_errors:
+                print(f"   - {error}")
+            return
         
         mode = self.text_manager.get('execution') if not self.config.dry_run else self.text_manager.get('preview')
         print(f"\n📋 {mode} - {len(operations)} operazioni")
@@ -889,7 +1079,17 @@ class TVSeriesRenamer:
         success_count = 0
         error_count = 0
         
-        for operation in operations:
+        if not self.config.dry_run:
+            for operation in operations:
+                restore_manager.add_rename(
+                    operation.old_path,
+                    operation.old_path.parent / operation.new_name
+                )
+            if not restore_manager.create_script():
+                print("❌ Impossibile creare il manifest di ripristino; rinomina annullata.")
+                return
+
+        for index, operation in enumerate(operations):
             new_path = operation.old_path.parent / operation.new_name
             
             # Tronca nomi per visualizzazione
@@ -905,39 +1105,37 @@ class TVSeriesRenamer:
                         status = "❌ EXISTS" if self.config.interface_language == Language.ENGLISH else "❌ ESISTE"
                         print(f"{status:<8} {old_display:<45} {new_display:<45}")
                         error_count += 1
-                        continue
-                    
-                    # Aggiungi alla lista per il ripristino PRIMA della rinomina
-                    restore_manager.add_rename(operation.old_path.name, operation.new_name)
+                        break
                     
                     operation.old_path.rename(new_path)
                     print(f"{'✅ DONE':<8} {old_display:<45} {new_display:<45}")
                     success_count += 1
+                    restore_manager.mark_renamed(index)
                     
                 except Exception as e:
                     error_msg = str(e)[:12] + "..." if len(str(e)) > 15 else str(e)
                     print(f"{'❌ ERROR':<8} {old_display:<45} {error_msg:<45}")
                     error_count += 1
+                    break
+
+        if not self.config.dry_run and error_count and success_count:
+            rolled_back = restore_manager.rollback(success_count)
+            print(f"↩️  Rollback automatico: {rolled_back}/{success_count} file ripristinati.")
+            if rolled_back == success_count:
+                success_count = 0
+        elif not self.config.dry_run and error_count and not success_count:
+            restore_manager.discard()
         
         print("=" * 100)
         print(self.text_manager.get('results', success_count, error_count))
         
-        # Crea script di ripristino se ci sono state rinomine successful
-        if not self.config.dry_run and restore_manager.renames:
-            try:
-                script_name = restore_manager.create_script()
-                if script_name:
-                    if self.config.interface_language == Language.ENGLISH:
-                        print(f"\n📄 Restore script created: {script_name}")
-                        print(f"💡 To restore original names, run: python {script_name}")
-                    else:
-                        print(f"\n📄 Script di ripristino creato: {script_name}")
-                        print(f"💡 Per ripristinare i nomi originali, esegui: python {script_name}")
-            except Exception as e:
-                if self.config.interface_language == Language.ENGLISH:
-                    print(f"\n❌ Error creating restore script: {e}")
-                else:
-                    print(f"\n❌ Errore nella creazione dello script di ripristino: {e}")
+        if not self.config.dry_run and restore_manager.script_name and success_count:
+            if self.config.interface_language == Language.ENGLISH:
+                print(f"\n📄 Restore script created: {restore_manager.script_name}")
+                print(f"💡 To restore original names, run: python {restore_manager.script_name}")
+            else:
+                print(f"\n📄 Script di ripristino creato: {restore_manager.script_name}")
+                print(f"💡 Per ripristinare i nomi originali, esegui: python {restore_manager.script_name}")
     
     @staticmethod
     def _truncate_filename(filename: str, max_length: int) -> str:
@@ -990,16 +1188,40 @@ class ConfigBuilder:
 # ============================================================================
 
 class RestoreScriptManager:
-    """Gestore per la creazione di script di ripristino"""
+    """Gestisce un manifest persistente e uno script di ripristino."""
     
     def __init__(self, directory: Path, text_manager: TextManager):
         self.directory = directory
         self.text_manager = text_manager
-        self.renames: List[Tuple[str, str]] = []
-    
-    def add_rename(self, old_name: str, new_name: str):
-        """Aggiunge una rinomina alla lista"""
-        self.renames.append((old_name, new_name))
+        self.renames: List[Dict[str, Any]] = []
+        self.script_name: Optional[str] = None
+        self.manifest_name: Optional[str] = None
+
+    def add_rename(self, old_path: Path, new_path: Path):
+        """Aggiunge una rinomina usando percorsi relativi alla directory root."""
+        self.renames.append({
+            'old': str(old_path.relative_to(self.directory)),
+            'new': str(new_path.relative_to(self.directory)),
+            'status': 'planned',
+        })
+
+    def mark_renamed(self, index: int):
+        self.renames[index]['status'] = 'renamed'
+        self._save_manifest()
+
+    def _save_manifest(self):
+        if not self.manifest_name:
+            return
+        manifest_path = self.directory / self.manifest_name
+        temporary_path = manifest_path.with_suffix('.json.tmp')
+        with temporary_path.open('w', encoding='utf-8') as manifest_file:
+            json.dump({
+                'version': 1,
+                'root': str(self.directory),
+                'renames': self.renames,
+            }, manifest_file, ensure_ascii=False, indent=2)
+            manifest_file.write('\n')
+        temporary_path.replace(manifest_path)
     
     def create_script(self) -> Optional[str]:
         """Crea lo script di ripristino"""
@@ -1007,10 +1229,19 @@ class RestoreScriptManager:
             return None
         
         timestamp = time.strftime("%Y%m%d_%H%M%S")
+        suffix = 0
         script_name = f"restore_tv_names_{timestamp}.py"
+        manifest_name = f"restore_tv_names_{timestamp}.json"
+        while (self.directory / script_name).exists() or (self.directory / manifest_name).exists():
+            suffix += 1
+            script_name = f"restore_tv_names_{timestamp}_{suffix}.py"
+            manifest_name = f"restore_tv_names_{timestamp}_{suffix}.json"
         script_path = self.directory / script_name
         
         try:
+            self.script_name = script_name
+            self.manifest_name = manifest_name
+            self._save_manifest()
             script_content = self._generate_script_content()
             
             with open(script_path, 'w', encoding='utf-8') as f:
@@ -1037,9 +1268,7 @@ class RestoreScriptManager:
             f'Creato: {time.strftime("%Y-%m-%d %H:%M:%S")}',
             '"""',
             '',
-            'import os',
             'from pathlib import Path',
-            'import sys',
             '',
             'def main():',
             '    """Funzione principale dello script di ripristino"""',
@@ -1050,13 +1279,13 @@ class RestoreScriptManager:
             '    ',
             '    script_dir = Path(__file__).parent.absolute()',
             '    ',
-            '    # Lista delle rinomine da ripristinare (nuovo_nome, nome_originale)',
+            '    # Lista dei percorsi relativi (nuovo, originale)',
             '    renames = ['
         ]
         
-        # Aggiungi le rinomine
-        for old_name, new_name in self.renames:
-            lines.append(f'        ({repr(new_name)}, {repr(old_name)}),')
+        # I percorsi sono relativi alla root, quindi funziona anche ricorsivamente.
+        for rename in self.renames:
+            lines.append(f"        ({rename['new']!r}, {rename['old']!r}),")
         
         lines.extend([
             '    ]',
@@ -1081,15 +1310,16 @@ class RestoreScriptManager:
             '    ',
             '    for current_name, original_name in renames:',
             '        try:',
-            '            current_path = script_dir / current_name',
-            '            original_path = script_dir / original_name',
+            '            current_path = script_dir / Path(current_name)',
+            '            original_path = script_dir / Path(original_name)',
             '            ',
             '            if current_path.exists() and not original_path.exists():',
             '                current_path.rename(original_path)',
             '                print(f"✅ {original_name}")',
             '                success += 1',
-            '            elif original_path.exists():',
-            '                print(f"⚠️  {original_name} (già esistente, skip)")',
+            '            elif original_path.exists() and not current_path.exists():',
+            '                print(f"✅ {original_name} (già ripristinato)")',
+            '                success += 1',
             '            else:',
             '                print(f"❌ {current_name} (file non trovato)")',
             '                errors += 1',
@@ -1100,7 +1330,7 @@ class RestoreScriptManager:
             '    print("-" * 50)',
             '    print(f"📊 Ripristinati: {success}, Errori: {errors}")',
             '    ',
-            '    if success > 0:',
+            '    if success and errors == 0:',
             '        print("\\n✅ Ripristino completato!")',
             '        # Auto-elimina lo script dopo l\'uso',
             '        try:',
@@ -1109,20 +1339,43 @@ class RestoreScriptManager:
             '        except Exception:',
             '            print("⚠️  Non è stato possibile eliminare lo script automaticamente")',
             '    ',
-            '    input("\\nPremi INVIO per uscire...")',
             '',
             'if __name__ == "__main__":',
-            '    try:',
-            '        main()',
-            '    except Exception as e:',
-            '        print(f"❌ Errore critico: {e}")',
-            '        import traceback',
-            '        traceback.print_exc()',
-            '        input("Premi INVIO per uscire...")',
-            '        sys.exit(1)'
+            '    main()'
         ])
         
         return '\n'.join(lines)
+
+    def rollback(self, count: int) -> int:
+        """Ripristina in ordine inverso le operazioni riuscite."""
+        restored = 0
+        for index in range(min(count, len(self.renames)) - 1, -1, -1):
+            rename = self.renames[index]
+            if rename['status'] != 'renamed':
+                continue
+            current_path = self.directory / rename['new']
+            original_path = self.directory / rename['old']
+            try:
+                if current_path.exists() and not original_path.exists():
+                    current_path.rename(original_path)
+                    rename['status'] = 'rolled_back'
+                    restored += 1
+            except OSError as exc:
+                logging.getLogger(__name__).error("Rollback failed for %s: %s", current_path, exc)
+        self._save_manifest()
+        return restored
+
+    def discard(self):
+        """Rimuove gli artefatti se non è stata rinominata alcuna voce."""
+        for name in (self.script_name, self.manifest_name):
+            if not name:
+                continue
+            try:
+                (self.directory / name).unlink()
+            except FileNotFoundError:
+                pass
+            except OSError as exc:
+                logging.getLogger(__name__).warning("Cannot remove %s: %s", name, exc)
 
 # ============================================================================
 # COMMAND PATTERN PER OPERAZIONI
@@ -1220,9 +1473,6 @@ class ConfigurationException(TVRenamerException):
 # ============================================================================
 # LOGGING MIGLIORATO
 # ============================================================================
-
-import logging
-from typing import Union
 
 class Logger:
     """Logger centralizzato per l'applicazione"""
@@ -1332,7 +1582,7 @@ def validate_directory(directory_path: str) -> Path:
         raise ConfigurationException(f"Directory non trovata: {directory_path}")
     if not directory.is_dir():
         raise ConfigurationException(f"Il percorso non è una directory: {directory_path}")
-    return directory
+    return directory.absolute()
 
 def main():
     """Funzione principale dell'applicazione"""

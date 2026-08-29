@@ -5,7 +5,7 @@
 # Licenza: GPL-3.0
 
 # Libreria principale per richieste HTTP alle API
-# Utilizzata per interrogare TMDB, TheTVDB e IMDb
+# Utilizzata per interrogare TMDB e TVMaze
 requests>=2.25.0
 
 # Librerie standard Python utilizzate (non richiedono installazione):
@@ -22,6 +22,6 @@ requests>=2.25.0
 # - stat (permessi file per rollback script)
 
 # Note:
-# - Lo script è compatibile con Python 3.6+
+# - Lo script è compatibile con Python 3.7+
 # - Non richiede dipendenze aggiuntive oltre a 'requests'
 # - Tutte le altre funzionalità utilizzano librerie standard Python
