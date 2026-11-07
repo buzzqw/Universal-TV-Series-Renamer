@@ -12,7 +12,7 @@
 
 **If you find this project useful, please consider supporting development:**
 
-[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)
+[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20me-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/buzzqw)
 
 **[💰 Donate via PayPal](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)**
 
@@ -553,7 +553,7 @@ For bugs, feature requests, or questions:
 
 **If this tool saved you time, please consider a small donation:**
 
-[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)
+[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20me-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/buzzqw)
 
 **[💰 Donate via PayPal](https://paypal.me/buzzqw?country.x=IT&locale.x=it_IT)**
 
